@@ -7,9 +7,10 @@ import { fetchUserWithRefs, studentFullName } from '../components/family/familyA
 import StudentAttendanceWidget from '../components/attendance/StudentAttendanceWidget';
 import StudentCarnetPanel from '../components/viescolaire/StudentCarnetPanel';
 import StudentIncidentsPanel from '../components/viescolaire/StudentIncidentsPanel';
+import PermissionGate from '../components/PermissionGate';
 import './VieScolaireDashboard.scss';
 
-export default function VieScolaireDashboardPage() {
+function VieScolaireDashboardContent() {
   const { userRole, clerkUser, userData } = useUserRole();
   const [data, setData] = useState(null);
   const [familyData, setFamilyData] = useState(null);
@@ -384,5 +385,24 @@ export default function VieScolaireDashboardPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function VieScolaireDashboardPage() {
+  return (
+    <PermissionGate
+      roles={['admin', 'prof', 'parent', 'eleve']}
+      fallback={
+        <div style={{ padding: '3rem 1rem', textAlign: 'center' }}>
+          <h1 style={{ color: '#ef4444', fontSize: '1.5rem' }}>Accès refusé</h1>
+          <p style={{ color: '#64748b' }}>
+            L'espace Vie Scolaire est réservé aux membres de l'établissement et aux familles.
+          </p>
+          <Link href="/" style={{ color: '#2563eb', textDecoration: 'underline' }}>Retour à l'accueil</Link>
+        </div>
+      }
+    >
+      <VieScolaireDashboardContent />
+    </PermissionGate>
   );
 }

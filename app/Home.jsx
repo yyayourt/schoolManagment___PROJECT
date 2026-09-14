@@ -534,6 +534,18 @@ export default ({ children }) => {
                           >
                             <i className="fas fa-calendar-alt"></i> Mon Planning
                           </Link>
+                          <Link
+                            href="/viescolaire"
+                            className="ecole-dropdown__item"
+                          >
+                            <i className="fas fa-clipboard-check"></i> Vie Scolaire
+                          </Link>
+                          <Link
+                            href="/conseil-de-classe"
+                            className="ecole-dropdown__item"
+                          >
+                            <i className="fas fa-landmark"></i> Conseil de Classe
+                          </Link>
                         </PermissionGate>
                         <PermissionGate role="eleve">
                           <Link href="/eleves" className="ecole-dropdown__item">
@@ -546,6 +558,11 @@ export default ({ children }) => {
                           </Link>
                         </PermissionGate>
                         <PermissionGate roles={["parent", "eleve"]}>
+                          <Link href="/viescolaire" className="ecole-dropdown__item">
+                            <i className="fas fa-clipboard-check"></i> Vie Scolaire
+                          </Link>
+                        </PermissionGate>
+                        <PermissionGate roles={["admin", "prof", "parent", "eleve"]}>
                           <Link href="/orientation" className="ecole-dropdown__item">
                             <i className="fas fa-compass"></i> Orientation (3ème)
                           </Link>

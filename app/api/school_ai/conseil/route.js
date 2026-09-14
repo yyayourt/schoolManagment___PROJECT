@@ -5,9 +5,14 @@ import { getAuthAndRole } from '../../../../utils/roles';
 
 export async function GET(request) {
   try {
-    const { success } = await getAuthAndRole(request);
+    const { success, isAdmin, isTeacher } = await getAuthAndRole(request);
     if (!success) {
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 401 });
+    }
+    // Les délibérations (mentions, appréciations, avis d'orientation) portent sur
+    // toute la classe : lecture réservée au personnel, pas aux familles.
+    if (!isAdmin && !isTeacher) {
+      return NextResponse.json({ error: 'Accès non autorisé (Réservé au personnel éducatif)' }, { status: 403 });
     }
 
     await dbConnect();
