@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '../../lib/authWithFallback';
+import { requireFamilyScope } from '../../lib/familyScope';
 import dbConnect from '../../lib/dbConnect';
 import Post from '../../_/models/ai/Post';
 import Group from '../../_/models/ai/Group';
 
 export async function GET(req) {
   try {
-    const userId = await requireAuth(req, 'GET /api/admin/patch-demo');
-    if (userId instanceof NextResponse) return userId;
+    const scope = await requireFamilyScope(req, { adminOnly: true });
+    if (scope.error) return scope.error;
+    const userId = scope.auth.userId;
 
     await dbConnect();
 

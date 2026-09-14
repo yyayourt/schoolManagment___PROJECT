@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import { isSandboxRequest } from './tenant'
 
 /**
  * Authentification robuste avec fallback JWT pour Clerk
@@ -8,6 +9,13 @@ import { NextResponse } from 'next/server'
  * 1. La méthode standard auth() de Clerk
  * 2. Un fallback de décodage JWT manuel depuis les headers si auth() échoue
  * 
+ * Mode démo (« falsy ») : un visiteur sans compte, ou un compte connecté qui
+ * n'est pas super-admin, reçoit l'identité factice `user_fake_admin_123` dont
+ * le rôle est ensuite lu dans le cookie `mock_role`. Ce compromis n'est
+ * accordé QUE si la requête est routée vers la base bac à sable
+ * (cf. `isSandboxRequest`). Sur le tenant production : anonyme → 401,
+ * compte connecté → sa vraie identité Clerk (rôle lu en base par getAuthAndRole).
+ *
  * @param {Request} request - L'objet Request de NextJS
  * @param {string} context - Contexte pour les logs (ex: "POST /api/schedules")
  * @returns {Object} - { success: boolean, userId: string|null, response: NextResponse|null }
@@ -87,9 +95,17 @@ export async function authWithFallback(request, context = 'API') {
       }
     }
 
+    // Le mode démo n'existe que sur le tenant bac à sable. En production, un
+    // compte connecté garde sa vraie identité et un anonyme est refusé.
+    const sandbox = await isSandboxRequest()
+    if (!sandbox && userId && authStatus === 'signed-in') {
+      forceFalsy = false
+    }
+
     if (forceFalsy || !userId || authStatus !== 'signed-in') {
       if (forceFalsy || !userId) {
-        if (process.env.NEXT_PUBLIC_MODE === 'test' && !forceFalsy) {
+        const testModeStrict = process.env.NEXT_PUBLIC_MODE === 'test' && !forceFalsy
+        if (testModeStrict || !sandbox) {
           return {
             success: false,
             userId: null,
