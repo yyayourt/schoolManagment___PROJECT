@@ -13,6 +13,12 @@ Welcome to the End-to-End (E2E) testing framework for `schoolManagment___PROJECT
    ```
 3. Copy `.env.example` to `.env` and fill the variables.
 
+## Unit tests (règles pures, sans navigateur)
+```bash
+npm run test:unit
+```
+Couvre `app/api/lib/schoolScopeRules.js` (cloisonnement multi-tenant), `tenantCache.js`, `utils/themeSanitizer.js` et `schoolGeneratorRules.js`. Lanceur `node --test`, fichiers `tests/unit/*.unit.mjs` (hors motif Playwright).
+
 ## Running Tests
 - **Headless mode** (CI/CD default):
   ```bash

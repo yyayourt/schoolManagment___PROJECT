@@ -3,25 +3,22 @@ import { cookies, headers } from 'next/headers'
 import User from '../_/models/ai/User'
 import dbConnect from './dbConnect'
 import { isSandboxRequest } from './tenant'
+import { decideSchoolKey, isDemoIdentity, isValidSchoolKey, SANDBOX_DEFAULT_KEY, PROD_DEFAULT_KEY } from './schoolScopeRules'
 
-/** École de démo partagée (base bac à sable). */
-export const SANDBOX_DEFAULT_KEY = 'demo_master'
-/** École historique (base de production). */
-export const PROD_DEFAULT_KEY = 'ecole_st_martin'
-
-const SCHOOL_KEY_RE = /^[a-z0-9_-]{1,64}$/i
+export { SANDBOX_DEFAULT_KEY, PROD_DEFAULT_KEY }
 
 /** École du compte connecté, posée par le middleware (non forgeable). */
 async function accountSchoolKey() {
   try {
     const headersList = await headers()
     const key = headersList.get('x-account-school-key') || ''
-    return SCHOOL_KEY_RE.test(key) ? key : ''
+    return isValidSchoolKey(key) ? key : ''
   } catch (e) {
     return ''
   }
 }
 
+/** Choix explicite du client : cookie puis en-tête `x-school-key`. */
 async function requestedSchoolKey() {
   let key = null
   try {
@@ -34,7 +31,7 @@ async function requestedSchoolKey() {
       key = headersList.get('x-school-key') || null
     } catch (e) { /* idem */ }
   }
-  return key && SCHOOL_KEY_RE.test(key) ? key : null
+  return isValidSchoolKey(key) ? key : null
 }
 
 async function isSuperAdminEmail() {
@@ -51,7 +48,9 @@ async function isSuperAdminEmail() {
 
 /**
  * Décide de l'école courante côté serveur. SEULE source de vérité pour le
- * filtre `schoolKey` des routes API.
+ * filtre `schoolKey` des routes API. La règle elle-même vit dans
+ * `schoolScopeRules.js` (pure, couverte par `npm run test:unit`) ; ce fichier
+ * ne fait que collecter ses entrées, paresseusement pour les plus coûteuses.
  *
  * - Tenant bac à sable / mode test : le cookie (ou l'en-tête) `x-school-key`
  *   fait foi — c'est la démo, l'utilisateur choisit son école ; à défaut,
@@ -67,13 +66,13 @@ async function isSuperAdminEmail() {
  *   `dbSchoolKey` : `null` si inconnu, `''` si le User n'a pas de clé.
  */
 export async function resolveSchoolKey(hint = {}) {
-  const requested = await requestedSchoolKey()
+  const testMode = process.env.NEXT_PUBLIC_MODE === 'test'
+  const requestedKey = await requestedSchoolKey()
+  const sandbox = testMode ? false : await isSandboxRequest()
 
-  if (process.env.NEXT_PUBLIC_MODE === 'test') return requested || PROD_DEFAULT_KEY
-  if (await isSandboxRequest()) {
-    // Choix explicite du visiteur (démo), sinon l'école sandbox rattachée au
-    // compte (transmise par le middleware), sinon la démo partagée.
-    return requested || (await accountSchoolKey()) || SANDBOX_DEFAULT_KEY
+  if (testMode || sandbox) {
+    const accountKey = sandbox ? await accountSchoolKey() : ''
+    return decideSchoolKey({ testMode, sandbox, requestedKey, accountKey })
   }
 
   // --- Production ---
@@ -81,20 +80,24 @@ export async function resolveSchoolKey(hint = {}) {
   if (userId === undefined) {
     try { userId = (await auth())?.userId || null } catch (e) { userId = null }
   }
-  if (!userId || userId === 'user_fake_admin_123' || String(userId).startsWith('mock_user_')) {
-    return PROD_DEFAULT_KEY
+  if (isDemoIdentity(userId)) {
+    return decideSchoolKey({ testMode, sandbox, requestedKey, accountKey: '', userId: null })
   }
 
-  let own = hint.dbSchoolKey
-  if (own === undefined || own === null) {
+  let dbSchoolKey = hint.dbSchoolKey
+  if (dbSchoolKey === undefined || dbSchoolKey === null) {
     await dbConnect() // idempotent : certaines routes résolvent l'école avant de se connecter
     const user = await User.findOne({ clerkId: userId }).select('schoolKey').lean()
-    own = user?.schoolKey || ''
+    dbSchoolKey = user?.schoolKey || ''
   }
-  own = own || PROD_DEFAULT_KEY
 
-  if (!requested || requested === own) return own
+  // L'appel Clerk (e-mail super-admin) n'est fait que si le client demande une autre école.
+  const own = dbSchoolKey || PROD_DEFAULT_KEY
+  const needsSuperAdmin = Boolean(requestedKey) && requestedKey !== own
+  let isSuperAdmin = false
+  if (needsSuperAdmin) {
+    isSuperAdmin = hint.isSuperAdmin !== undefined ? hint.isSuperAdmin : await isSuperAdminEmail()
+  }
 
-  const superAdmin = hint.isSuperAdmin !== undefined ? hint.isSuperAdmin : await isSuperAdminEmail()
-  return superAdmin ? requested : own
+  return decideSchoolKey({ testMode, sandbox, requestedKey, accountKey: '', userId, dbSchoolKey, isSuperAdmin })
 }

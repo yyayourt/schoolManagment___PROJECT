@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher, clerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { TENANT_CACHE_COOKIE, readTenantCache, tenantCacheOptions, tenantCacheValue } from './app/api/lib/tenantCache';
+import { decideTenant } from './app/api/lib/schoolScopeRules';
 
 /**
  * École rattachée à un compte Clerk, sans requête Mongo :
@@ -47,32 +48,27 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   // 1. Déterminer la base de données active (Production vs Sandbox)
-  let tenantDb = 'prod';
-  let accountKey = null;   // école rattachée au compte connecté (sandbox_* → base sandbox)
+  // Règle pure dans app/api/lib/schoolScopeRules.js (decideTenant) :
+  //   x-tenant-mode: sandbox ou clé sandbox_* demandée → sandbox ;
+  //   anonyme → sandbox (la production exige un compte Clerk) ;
+  //   compte dont l'école (Clerk publicMetadata) est sandbox_* → sandbox ; sinon prod.
+  let accountKey = '';   // école rattachée au compte connecté
   let cacheToSet = null;
+  let userId = null;
   const schoolKey = request.headers.get('x-school-key') || request.cookies.get('x-school-key')?.value;
   const tenantMode = request.headers.get('x-tenant-mode');
 
-  if (tenantMode === 'sandbox' || (schoolKey && schoolKey.startsWith('sandbox_'))) {
-    tenantDb = 'sandbox';
-  } else {
-    // La production exige un compte Clerk : tout anonyme est forcé en sandbox,
-    // quel que soit le cookie x-school-key (l'école courante est ensuite
-    // décidée côté serveur, cf. app/api/lib/schoolScope.js).
+  const clientForcesSandbox = tenantMode === 'sandbox' || (schoolKey && schoolKey.startsWith('sandbox_'));
+  if (!clientForcesSandbox) {
     const authObj = await auth();
-    if (!authObj.userId) {
-      tenantDb = 'sandbox';
-    } else {
-      // Compte connecté : son école (Clerk publicMetadata) décide du tenant,
-      // même sans cookie x-school-key côté client.
+    userId = authObj.userId || null;
+    if (userId) {
       const resolved = await accountSchoolKey(authObj, request);
       accountKey = resolved.key;
       cacheToSet = resolved.cacheToSet;
-      if (accountKey.startsWith('sandbox_')) {
-        tenantDb = 'sandbox';
-      }
     }
   }
+  const tenantDb = decideTenant({ tenantModeHeader: tenantMode, requestedKey: schoolKey, userId, accountKey });
 
   // Sécurité absolue : On ignore le mockRole en production (hors mode test)
   const isSandbox = (tenantDb === 'sandbox');

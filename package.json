@@ -13,7 +13,8 @@
     "process-fallbacks:force": "node scripts/process-cloudinary-fallbacks.js --force",
     "migrate-points": "node scripts/migrate-bonus-manus-to-points.js",
     "migrate-points:dry": "node scripts/migrate-bonus-manus-to-points.js --dry-run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:unit": "node --test tests/unit/*.unit.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.21.0",
