@@ -70,7 +70,7 @@ export async function POST(request) {
       try {
         const client = await clerkClient();
         await client.users.updateUserMetadata(clerkId, {
-          publicMetadata: { role: existingUser.role }
+          publicMetadata: { role: existingUser.role, schoolKey: existingUser.schoolKey || '' }
         });
         console.log(`✅ Synced role '${existingUser.role}' to Clerk publicMetadata for ${clerkId}`);
       } catch (clerkErr) {
@@ -139,7 +139,7 @@ export async function POST(request) {
     try {
       const client = await clerkClient();
       await client.users.updateUserMetadata(clerkId, {
-        publicMetadata: { role: newUser.role }
+        publicMetadata: { role: newUser.role, schoolKey: newUser.schoolKey || '' }
       });
       console.log(`✅ Synced role '${newUser.role}' to Clerk publicMetadata for ${clerkId}`);
     } catch (clerkErr) {

@@ -80,7 +80,19 @@ et `requireFamilyScope` l'expose : `{ auth, allowedStudentIds, isStaff, schoolKe
 
 ---
 
-## Chantier B — Routage sandbox des comptes connectés (priorité 2, dépend de A)
+## Chantier B — Routage sandbox des comptes connectés — ✅ FAIT (2026-09-14)
+
+> Livré : `publicMetadata.schoolKey` écrit par `sync-user` et `approve-school` ; `middleware.js`
+> lit dans l'ordre les claims de session (`metadata.schoolKey`, si le jeton Clerk expose
+> `public_metadata`), puis un cookie cache httpOnly lié au compte (`tenant_school_cache`, 1 h,
+> `app/api/lib/tenantCache.js`), puis Clerk backend (`users.getUser`) avec mise en cache. Une clé
+> `sandbox_*` route vers la base sandbox ; la clé est transmise au serveur via l'en-tête
+> `x-account-school-key` (réécrit, non forgeable) que `resolveSchoolKey` utilise en sandbox à
+> défaut de choix explicite. Script one-shot : `node scripts/sync-clerk-school-keys.js [--dry-run]`
+> (à lancer sur la base prod PUIS sur la base sandbox). La configuration du jeton de session dans
+> le Dashboard Clerk (étape 2 ci-dessous) reste **optionnelle** : elle évite l'appel Clerk + cookie.
+> Limite connue : après `approve-school`, le compte bascule vers la prod au plus tard 1 h après
+> (expiration du cache), immédiatement si les claims sont configurées.
 
 ### Constat
 - `middleware.js` route un compte Clerk vers **prod** sauf si cookie/en-tête `x-school-key`

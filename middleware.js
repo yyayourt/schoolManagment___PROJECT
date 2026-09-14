@@ -1,5 +1,33 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher, clerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { TENANT_CACHE_COOKIE, readTenantCache, tenantCacheOptions, tenantCacheValue } from './app/api/lib/tenantCache';
+
+/**
+ * École rattachée à un compte Clerk, sans requête Mongo :
+ *   1. claims de session (`metadata.schoolKey`, si le jeton Clerk expose public_metadata),
+ *   2. cookie cache httpOnly lié au compte (1 h),
+ *   3. appel Clerk backend (`publicMetadata.schoolKey`), puis mise en cache.
+ * Renvoie { key, cacheToSet } — `key` vaut '' si le compte n'a pas d'école.
+ */
+async function accountSchoolKey(authObj, request) {
+  const { userId, sessionClaims } = authObj;
+  const fromClaims = sessionClaims?.metadata?.schoolKey || sessionClaims?.publicMetadata?.schoolKey;
+  if (typeof fromClaims === 'string') return { key: fromClaims, cacheToSet: null };
+
+  const cached = readTenantCache(request.cookies.get(TENANT_CACHE_COOKIE)?.value, userId);
+  if (cached !== null) return { key: cached, cacheToSet: null };
+
+  let key = '';
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    key = typeof user?.publicMetadata?.schoolKey === 'string' ? user.publicMetadata.schoolKey : '';
+  } catch (e) {
+    // Clerk indisponible : on ne met pas en cache, on retentera à la prochaine requête
+    return { key: '', cacheToSet: null };
+  }
+  return { key, cacheToSet: tenantCacheValue(userId, key) };
+}
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -20,6 +48,8 @@ export default clerkMiddleware(async (auth, request) => {
 
   // 1. Déterminer la base de données active (Production vs Sandbox)
   let tenantDb = 'prod';
+  let accountKey = null;   // école rattachée au compte connecté (sandbox_* → base sandbox)
+  let cacheToSet = null;
   const schoolKey = request.headers.get('x-school-key') || request.cookies.get('x-school-key')?.value;
   const tenantMode = request.headers.get('x-tenant-mode');
 
@@ -32,6 +62,15 @@ export default clerkMiddleware(async (auth, request) => {
     const authObj = await auth();
     if (!authObj.userId) {
       tenantDb = 'sandbox';
+    } else {
+      // Compte connecté : son école (Clerk publicMetadata) décide du tenant,
+      // même sans cookie x-school-key côté client.
+      const resolved = await accountSchoolKey(authObj, request);
+      accountKey = resolved.key;
+      cacheToSet = resolved.cacheToSet;
+      if (accountKey.startsWith('sandbox_')) {
+        tenantDb = 'sandbox';
+      }
     }
   }
 
@@ -68,12 +107,18 @@ export default clerkMiddleware(async (auth, request) => {
   if (tenantDb === 'sandbox') {
     requestHeaders.set('x-sample-mode', 'true');
   }
+  // École du compte, transmise au serveur (jamais forgeable : réécrite ici).
+  requestHeaders.set('x-account-school-key', accountKey || '');
 
-  return NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
+  if (cacheToSet !== null) {
+    response.cookies.set(TENANT_CACHE_COOKIE, cacheToSet, tenantCacheOptions());
+  }
+  return response;
 });
 
 export const config = {

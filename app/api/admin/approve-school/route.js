@@ -80,6 +80,17 @@ export async function GET(request) {
     user.role = 'admin'; // L'utilisateur devient l'admin de sa vraie école
     await user.save();
 
+    // 6. Propager à Clerk : le middleware route le compte d'après publicMetadata.schoolKey
+    try {
+      const { clerkClient } = await import('@clerk/nextjs/server');
+      const client = await clerkClient();
+      await client.users.updateUserMetadata(userId, {
+        publicMetadata: { role: 'admin', schoolKey: officialSchoolKey }
+      });
+    } catch (clerkErr) {
+      console.error('⚠️ Failed to sync approved school to Clerk metadata:', clerkErr);
+    }
+
     // Retourner une page HTML élégante de succès
     const html = `
       <!DOCTYPE html>

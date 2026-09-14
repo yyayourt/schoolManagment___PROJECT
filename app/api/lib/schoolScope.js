@@ -11,6 +11,17 @@ export const PROD_DEFAULT_KEY = 'ecole_st_martin'
 
 const SCHOOL_KEY_RE = /^[a-z0-9_-]{1,64}$/i
 
+/** École du compte connecté, posée par le middleware (non forgeable). */
+async function accountSchoolKey() {
+  try {
+    const headersList = await headers()
+    const key = headersList.get('x-account-school-key') || ''
+    return SCHOOL_KEY_RE.test(key) ? key : ''
+  } catch (e) {
+    return ''
+  }
+}
+
 async function requestedSchoolKey() {
   let key = null
   try {
@@ -43,8 +54,10 @@ async function isSuperAdminEmail() {
  * filtre `schoolKey` des routes API.
  *
  * - Tenant bac à sable / mode test : le cookie (ou l'en-tête) `x-school-key`
- *   fait foi — c'est la démo, l'utilisateur choisit son école. Défaut :
- *   `demo_master` en sandbox, `ecole_st_martin` en mode test.
+ *   fait foi — c'est la démo, l'utilisateur choisit son école ; à défaut,
+ *   l'école sandbox rattachée au compte (en-tête `x-account-school-key` posé
+ *   par le middleware). Défaut : `demo_master` en sandbox, `ecole_st_martin`
+ *   en mode test.
  * - Tenant production : la clé du document `User` du compte Clerk fait foi ;
  *   le cookie est IGNORÉ, sauf pour le super-admin (NEXT_PUBLIC_EMAIL_ADMIN)
  *   qui peut ainsi administrer plusieurs écoles. Défaut : `ecole_st_martin`.
@@ -57,7 +70,11 @@ export async function resolveSchoolKey(hint = {}) {
   const requested = await requestedSchoolKey()
 
   if (process.env.NEXT_PUBLIC_MODE === 'test') return requested || PROD_DEFAULT_KEY
-  if (await isSandboxRequest()) return requested || SANDBOX_DEFAULT_KEY
+  if (await isSandboxRequest()) {
+    // Choix explicite du visiteur (démo), sinon l'école sandbox rattachée au
+    // compte (transmise par le middleware), sinon la démo partagée.
+    return requested || (await accountSchoolKey()) || SANDBOX_DEFAULT_KEY
+  }
 
   // --- Production ---
   let userId = hint.userId
