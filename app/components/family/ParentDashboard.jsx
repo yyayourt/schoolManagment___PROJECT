@@ -7,6 +7,8 @@ import { fetchUserWithRefs, studentFullName } from './familyApi';
 import AppointmentsPanel from '../appointments/AppointmentsPanel';
 import HomeworkTodoList from '../homework/HomeworkTodoList';
 import StudentPointsWidget from '../points/StudentPointsWidget';
+import StudentDailyScheduleWidget from './StudentDailyScheduleWidget';
+import StudentRecentNotesWidget from './StudentRecentNotesWidget';
 
 // Nom lisible d'une classe à partir de son _id (via le contexte admin).
 function classLabel(classes, classId) {
@@ -117,6 +119,18 @@ export default function ParentDashboard() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
+                  {/* Emploi du temps du jour */}
+                  <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                    <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem', color: '#1e293b' }}>🕘 Emploi du temps du jour</h4>
+                    <StudentDailyScheduleWidget classId={activeClassId} />
+                  </div>
+
+                  {/* 3 dernières notes */}
+                  <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                    <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem', color: '#1e293b' }}>📝 Dernières notes</h4>
+                    <StudentRecentNotesWidget studentId={activeChild._id} limit={3} detailHref={`/eleves/${activeChild._id}`} />
+                  </div>
+
                   {/* Cahier de texte */}
                   <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
                     <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem', color: '#1e293b' }}>📚 Cahier de texte & Devoirs</h4>

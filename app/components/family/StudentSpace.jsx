@@ -5,6 +5,8 @@ import { useUserRole } from '../../../stores/useUserRole';
 import { fetchUserWithRefs, studentFullName } from './familyApi';
 import HomeworkTodoList from '../homework/HomeworkTodoList';
 import StudentPointsWidget from '../points/StudentPointsWidget';
+import StudentDailyScheduleWidget from './StudentDailyScheduleWidget';
+import StudentRecentNotesWidget from './StudentRecentNotesWidget';
 
 export default function StudentSpace() {
   const { clerkUser, userData } = useUserRole();
@@ -44,6 +46,18 @@ export default function StudentSpace() {
       ) : (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+            {/* Emploi du temps du jour */}
+            <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>🕘 Mes cours aujourd'hui</h3>
+              <StudentDailyScheduleWidget classId={classId} />
+            </div>
+
+            {/* Dernières notes */}
+            <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>📝 Mes dernières notes</h3>
+              <StudentRecentNotesWidget studentId={eleve._id} limit={3} detailHref={profileHref} />
+            </div>
+
             {/* Cahier de texte interactif */}
             <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -70,6 +84,7 @@ export default function StudentSpace() {
               <Link href="/stages-3eme" className="familyHome__quick" style={{ padding: '1rem', background: '#ccfbf1', color: '#115e59', borderRadius: '8px', textDecoration: 'none', fontWeight: 600 }}>💼 Mon Stage de 3ème</Link>
               <Link href="/brevet-dnb" className="familyHome__quick" style={{ padding: '1rem', background: '#dbeafe', color: '#1e40af', borderRadius: '8px', textDecoration: 'none', fontWeight: 600 }}>🎓 Simulateur Brevet DNB</Link>
               <Link href="/socle-commun" className="familyHome__quick" style={{ padding: '1rem', background: '#fef3c7', color: '#92400e', borderRadius: '8px', textDecoration: 'none', fontWeight: 600 }}>🎯 Mon Socle Commun</Link>
+              <Link href="/viescolaire" className="familyHome__quick" style={{ padding: '1rem', background: '#fecdd3', color: '#9f1239', borderRadius: '8px', textDecoration: 'none', fontWeight: 600 }}>🏛️ Vie Scolaire & Carnet</Link>
               <Link href="/games" className="familyHome__quick" style={{ padding: '1rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '8px', textDecoration: 'none', fontWeight: 600 }}>🎮 Jeux Pédagogiques</Link>
             </div>
           </section>
