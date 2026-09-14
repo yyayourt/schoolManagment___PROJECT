@@ -28,7 +28,7 @@ Ce document recense les propositions d'optimisation visuelle et UX de l'applicat
 
 ## ✅ 3. Refonte de la Page Admin & Panel de Customisation — FAIT
 * **Implémenté :** `DesignSettingsManager.jsx` branché dans `app/administration/page.jsx` (identité visuelle, textes, couleurs).
-* ⏳ **Reste (cf. roadmap Administration) :** génération de formulaire, école bac à sable.
+* **Fait (2026-09) :** génération de formulaire (`SchoolGeneratorForm.jsx`, onglet « Générer l'école » de l'administration → `POST /api/school_ai/generate`) et école bac à sable personnalisée depuis la landing (`POST /api/sandbox/create`, purge `GET /api/cron/cleanup-sandboxes`).
 
 ---
 

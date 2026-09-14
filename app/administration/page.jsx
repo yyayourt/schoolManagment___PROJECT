@@ -7,6 +7,7 @@ import PermissionGate from '../components/PermissionGate';
 import Link from 'next/link';
 import FeeConfigManager from '../components/FeeConfigManager';
 import DesignSettingsManager from '../components/DesignSettingsManager';
+import SchoolGeneratorForm from '../components/SchoolGeneratorForm';
 
 /**
  * Page d'Administration
@@ -24,7 +25,7 @@ export default function AdministrationPage() {
     const { isAdmin, loading: authLoading, clerkUser } = useUserRole();
     const [isMigrating, setIsMigrating] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
-    const [activeTab, setActiveTab] = useState('eleves'); // 'eleves', 'enseignants', 'classes', 'fees', 'design'
+    const [activeTab, setActiveTab] = useState('eleves'); // 'eleves', 'enseignants', 'classes', 'fees', 'design', 'generate'
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -114,6 +115,24 @@ export default function AdministrationPage() {
         }
     };
 
+    const handleGenerated = async (data) => {
+        alert(`✅ ${data.message}`);
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('classes');
+            localStorage.removeItem('eleves');
+            localStorage.removeItem('enseignants');
+            localStorage.removeItem('app_subjects');
+        }
+        if (fetchBootstrap) {
+            await fetchBootstrap(true);
+        } else {
+            fetchEleves(true);
+            fetchEnseignants(true);
+            fetchClasses(true);
+        }
+        setActiveTab('classes');
+    };
+
     const handleEdit = (item, type) => {
         setSelected(item);
         setEditType(type);
@@ -176,6 +195,13 @@ export default function AdministrationPage() {
                             >
                                 🎨 Paramètres de Design
                             </button>
+                            <button
+                                className={`admin-page__config-btn ${activeTab === 'generate' ? '--active' : ''}`}
+                                onClick={() => setActiveTab('generate')}
+                                style={{ marginLeft: '10px' }}
+                            >
+                                🏗️ Générer l'école
+                            </button>
                         </div>
                     </div>
 
@@ -200,7 +226,7 @@ export default function AdministrationPage() {
                         </button>
                     </nav>
 
-                    {activeTab !== 'fees' && activeTab !== 'design' && (
+                    {activeTab !== 'fees' && activeTab !== 'design' && activeTab !== 'generate' && (
                         <div className="admin-page__controls">
                             <div className="admin-page__search-wrapper">
                                 <input
@@ -222,6 +248,10 @@ export default function AdministrationPage() {
                     {activeTab === 'fees' ? (
                         <div className="admin-page__dynamic-content">
                             <FeeConfigManager />
+                        </div>
+                    ) : activeTab === 'generate' ? (
+                        <div className="admin-page__dynamic-content">
+                            <SchoolGeneratorForm mode="school" onSuccess={handleGenerated} />
                         </div>
                     ) : activeTab === 'design' ? (
                         <div className="admin-page__dynamic-content">

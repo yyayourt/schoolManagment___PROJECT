@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState } from 'react';
+import SchoolGeneratorForm from './SchoolGeneratorForm';
 
 export default function LandingPage() {
+    const [showGenerator, setShowGenerator] = useState(false);
+
     const enterGeneralDemo = () => {
         document.cookie = "force_falsy=true; path=/; max-age=86400";
         document.cookie = "is_landing_demo=true; path=/; max-age=86400";
@@ -116,6 +119,7 @@ export default function LandingPage() {
                 }
                 .hero__actions {
                     display: flex;
+                    flex-wrap: wrap;
                     justify-content: center;
                     gap: 16px;
                     animation: fadeInUp 0.6s ease 0.3s both;
@@ -313,6 +317,9 @@ export default function LandingPage() {
                             <button className="btn btn--primary" onClick={enterGeneralDemo}>
                                 🚀 Accéder à la Démo Immédiate
                             </button>
+                            <button className="btn btn--secondary" onClick={() => setShowGenerator(true)}>
+                                🏗️ Créer mon école bac à sable
+                            </button>
                         </div>
 
                         <div className="proof">
@@ -360,6 +367,17 @@ export default function LandingPage() {
                 </main>
             </div>
 
+            {showGenerator && (
+                <div className="school-generator-modal" role="dialog" aria-modal="true" onClick={(e) => { if (e.target === e.currentTarget) setShowGenerator(false); }}>
+                    <div className="school-generator-modal__dialog">
+                        <SchoolGeneratorForm
+                            mode="sandbox"
+                            onCancel={() => setShowGenerator(false)}
+                            onSuccess={() => { window.location.reload(); }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

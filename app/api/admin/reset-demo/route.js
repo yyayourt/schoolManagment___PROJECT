@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../lib/dbConnect';
-import { requireAuth } from '../../lib/authWithFallback';
+import { requireFamilyScope } from '../../lib/familyScope';
 
 import Institution from '../../_/models/ai/Institution';
 import SchoolSettings from '../../_/models/ai/SchoolSettings';
@@ -49,8 +49,9 @@ const getRandomDateInYear = (yearStr) => {
 
 export async function POST(request) {
   try {
-    const userId = await requireAuth(request, 'POST /api/admin/reset-demo');
-    if (userId instanceof NextResponse) return userId;
+    const scope = await requireFamilyScope(request, { adminOnly: true });
+    if (scope.error) return scope.error;
+    const userId = scope.auth.userId;
 
     await dbConnect();
 
