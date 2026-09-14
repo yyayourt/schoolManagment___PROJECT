@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useContext, useEffect, useState } from 'react';
+import { sanitizeMediaUrl } from '../utils/themeSanitizer';
 import { AiAdminContext } from '../stores/ai_adminContext';
 import { useUserRole } from '../stores/useUserRole';
 import TeacherReportModule from './components/TeacherReportModule';
@@ -76,7 +77,7 @@ export default function Page() {
       {/* Hero Header Section */}
       <header className="ecole-dashboard-hero">
         {homepage.logoUrl && (
-          <img src={homepage.logoUrl} alt="Logo" className="ecole-dashboard-hero__logo" />
+          <img src={sanitizeMediaUrl(homepage.logoUrl, '/logo.png')} alt="Logo" className="ecole-dashboard-hero__logo" />
         )}
         <div className="ecole-dashboard-hero__content">
           <h1 className="ecole-dashboard-hero__title">{homepage.title || 'Portail Éducatif'}</h1>

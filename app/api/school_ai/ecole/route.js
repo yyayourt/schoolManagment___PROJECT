@@ -5,6 +5,7 @@ import SchoolSettings from '../../_/models/ai/SchoolSettings';
 import Eleve from '../../_/models/ai/Eleve';
 import { checkRole, Roles } from '../../../../utils/roles';
 import { authWithFallback } from '../../lib/authWithFallback';
+import { sanitizeHomepageTheme } from '../../../../utils/themeSanitizer';
 
 export async function GET(request) {
   try {
@@ -79,9 +80,13 @@ export async function PUT(request) {
       updateFields.targets = body.targets;
     }
 
-    // Handle homepage update
+    // Handle homepage update (thème assaini : couleurs hex, polices/presets en
+    // liste blanche, URL de médias relatives ou Cloudinary, textes bornés)
     if (body.homepage !== undefined) {
-      updateFields.homepage = body.homepage;
+      if (!body.homepage || typeof body.homepage !== 'object' || Array.isArray(body.homepage)) {
+        return NextResponse.json({ error: 'homepage doit être un objet' }, { status: 400 });
+      }
+      updateFields.homepage = sanitizeHomepageTheme(body.homepage);
     }
 
     // Handle cascade delete: if a target key was removed, clean all students

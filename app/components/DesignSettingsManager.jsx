@@ -1,18 +1,9 @@
 "use client"
 
 import React, { useState, useEffect, useContext } from 'react';
+import { FONT_OPTIONS } from '../../utils/themeSanitizer';
 import { AiAdminContext } from '../../stores/ai_adminContext';
 
-const FONT_OPTIONS = [
-  { value: 'Poppins', label: 'Poppins (Moderne & Chaleureux)' },
-  { value: 'Inter', label: 'Inter (Pro & Épuré)' },
-  { value: 'Montserrat', label: 'Montserrat (Géométrique)' },
-  { value: 'Outfit', label: 'Outfit (Premium & Rond)' },
-  { value: 'Playfair Display', label: 'Playfair Display (Classique / Littéraire)' },
-  { value: 'Roboto', label: 'Roboto (Standard & Neutre)' },
-  { value: 'Open Sans', label: 'Open Sans (Lisible & Clair)' },
-  { value: 'Lato', label: 'Lato (Stylé & Équilibré)' },
-];
 
 export default function DesignSettingsManager({ handleMigrateYear, handleResetDemo, isResetting, clerkUser }) {
   const { homepage, homepageLoaded, saveHomepage, uploadFile } = useContext(AiAdminContext);

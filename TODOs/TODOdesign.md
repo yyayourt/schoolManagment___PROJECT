@@ -21,7 +21,7 @@ Ce document recense les propositions d'optimisation visuelle et UX de l'applicat
 
 ## ✅ 2. Customisation Globale par l'Administrateur — FAIT
 * **Implémenté :** `SchoolSettings.js` (`homepageSchema`) contient `logoUrl`, `bannerUrl`, `primaryColor`, `accentColor`, `fontHeading`, `fontBody`, `borderRadiusPreset`, `headerStylePreset`. Injection dynamique du thème (polices Google Fonts + variables CSS) dans `Home.jsx`.
-* ⚠️ **Reste à vérifier :** validation des valeurs injectées dans la balise `<style>` (format hex des couleurs, whitelist des polices) — risque d'injection CSS si le compte admin est compromis.
+* **Fait (2026-09) :** `utils/themeSanitizer.js` (hex strict, polices/presets en liste blanche, URL de médias relatives ou Cloudinary, textes bornés) appliqué à l'écriture dans `PUT /api/school_ai/ecole` et à l'injection dans `Home.jsx` / `page.jsx`.
 * ⏳ **Optionnel non fait :** bandeau de notification global défilant ; galerie de thèmes préconfigurés en un clic ("Classic Royal", "Warm Amber", "Emerald Forest", "Cyber Dark").
 
 ---

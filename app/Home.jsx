@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { sanitizeHomepageTheme, sanitizeMediaUrl } from "../utils/themeSanitizer";
 import { useContext, useEffect, useState, Fragment, useMemo } from "react";
 import { AiAdminContext } from "../stores/ai_adminContext";
 import { useUserRole } from "../stores/useUserRole";
@@ -55,9 +56,13 @@ export default ({ children }) => {
   useEffect(() => {
     if (!homepage) return;
 
+    // Valeurs assainies : hex strict, polices/presets en liste blanche, URL de
+    // médias relatives ou Cloudinary. Tout le reste retombe sur les défauts.
+    const theme = sanitizeHomepageTheme(homepage, { fill: true });
+
     // 1. Load custom Google Fonts
-    const headingFont = homepage.fontHeading || "Poppins";
-    const bodyFont = homepage.fontBody || "Inter";
+    const headingFont = theme.fontHeading;
+    const bodyFont = theme.fontBody;
     const linkId = "dynamic-google-fonts";
     let link = document.getElementById(linkId);
     if (!link) {
@@ -66,8 +71,8 @@ export default ({ children }) => {
       link.rel = "stylesheet";
       document.head.appendChild(link);
     }
-    const headingQuery = headingFont.replace(/\s+/g, "+");
-    const bodyQuery = bodyFont.replace(/\s+/g, "+");
+    const headingQuery = encodeURIComponent(headingFont).replace(/%20/g, "+");
+    const bodyQuery = encodeURIComponent(bodyFont).replace(/%20/g, "+");
     link.href = `https://fonts.googleapis.com/css2?family=${headingQuery}:wght@300;400;500;600;700;800&family=${bodyQuery}:wght@300;400;500;600;700&display=swap`;
 
     // 2. Apply typography variables
@@ -85,8 +90,8 @@ export default ({ children }) => {
     );
 
     // 3. Apply color palettes (with automatic harmony adjustment)
-    const primaryColor = homepage.primaryColor || "#1E3A8A";
-    const accentColor = homepage.accentColor || "#F97316";
+    const primaryColor = theme.primaryColor;
+    const accentColor = theme.accentColor;
 
     const hexToRgba = (hex, alpha) => {
       const cleanHex = hex.replace("#", "");
@@ -175,8 +180,7 @@ export default ({ children }) => {
       large: { sm: "12px", md: "20px", lg: "28px", xl: "36px", pill: "9999px" },
     };
 
-    const radiusPreset = homepage.borderRadiusPreset || "medium";
-    const preset = radiiPresets[radiusPreset] || radiiPresets.medium;
+    const preset = radiiPresets[theme.borderRadiusPreset] || radiiPresets.medium;
 
     document.documentElement.style.setProperty("--radius-sm", preset.sm);
     document.documentElement.style.setProperty("--border-radius-sm", preset.sm);
@@ -195,10 +199,10 @@ export default ({ children }) => {
     // 5. Header Preset & Background Image
     document.documentElement.style.setProperty(
       "--bg-header-url",
-      `url('${homepage.bannerUrl || "/bg_header.webp"}')`,
+      `url('${theme.bannerUrl}')`,
     );
 
-    const headerPreset = homepage.headerStylePreset || "glass";
+    const headerPreset = theme.headerStylePreset;
     const headerEl = document.querySelector(".ecole-admin__header");
     if (headerEl) {
       // Nettoyer les anciennes classes de preset
@@ -352,7 +356,7 @@ export default ({ children }) => {
             <div className="ecole-admin__branding">
               <Link href={"/"} className="ecole-admin__branding-logo">
                 <img
-                  src={homepage?.logoUrl || "/logo.png"}
+                  src={sanitizeMediaUrl(homepage?.logoUrl, "/logo.png")}
                   alt="Logo"
                   className="ecole-admin__branding-logo-img"
                 />
