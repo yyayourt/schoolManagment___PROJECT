@@ -6,6 +6,7 @@ import dbConnect from '../../../lib/dbConnect'
 const Group = require('../../../_/models/ai/Group')
 const Post = require('../../../_/models/ai/Post')
 const User = require('../../../_/models/ai/User')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 /**
  * GET /api/groups/[id]/feed
@@ -34,8 +35,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Non autorisé à accéder à ce groupe' }, { status: 403 })
     }
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin'
+    const schoolKey = await resolveSchoolKey()
 
     // Récupérer les posts triés par date décroissante
     const posts = await Post.find({ schoolKey, groupId: id }).sort({ createdAt: -1 })
@@ -122,8 +122,7 @@ export async function POST(request, { params }) {
     const authorUser = await User.findOne({ clerkId: userId })
     const authorName = authorUser ? `${authorUser.firstName} ${authorUser.lastName}`.trim() || authorUser.email : 'Utilisateur'
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) {
       return NextResponse.json({ error: 'Accès refusé : schoolKey manquant' }, { status: 403 })
     }

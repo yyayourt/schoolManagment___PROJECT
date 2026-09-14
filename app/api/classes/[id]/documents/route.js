@@ -7,6 +7,7 @@ import { checkRole, Roles } from '../../../../../utils/roles'
 const ClassDocument = require('../../../_/models/ai/ClassDocument')
 const Classe = require('../../../_/models/ai/Classe')
 const User = require('../../../_/models/ai/User')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 // Taille maximale acceptée pour un document (15 Mo).
 const MAX_FILE_SIZE = 15 * 1024 * 1024
@@ -37,9 +38,7 @@ export async function GET(request, { params }) {
 
     await dbConnect()
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     const { id } = await params
 

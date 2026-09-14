@@ -2,6 +2,7 @@ import dbConnect from '../../lib/dbConnect';
 import ConseilClasse from '../../_/models/ai/ConseilClasse';
 import { NextResponse } from 'next/server';
 import { getAuthAndRole } from '../../../../utils/roles';
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 export async function GET(request) {
   try {
@@ -17,9 +18,7 @@ export async function GET(request) {
 
     await dbConnect();
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     const { searchParams } = new URL(request.url);
     const classeId = searchParams.get('classeId');
@@ -52,9 +51,7 @@ export async function POST(request) {
 
     await dbConnect();
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     const body = await request.json();
     const { classeId, trimestre, annee, dateConseil, presents, decisions, compteRendu } = body;

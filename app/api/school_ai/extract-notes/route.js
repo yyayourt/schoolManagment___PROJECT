@@ -2,6 +2,7 @@ import { checkRole, Roles } from '../../../../utils/roles';
 import { authWithFallback } from '../../lib/authWithFallback';
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 // Construct Gemini instance
 // Make sure to add GEMINI_API_KEY to your .env file
@@ -14,9 +15,7 @@ export async function POST(request) {
             return authResult.response;
         }
 
-        const { cookies } = await import('next/headers');
-        const cookieStore = await cookies();
-        if (cookieStore.get('x-school-key')?.value === 'demo_master') {
+        if ((await resolveSchoolKey()) === 'demo_master') {
             return NextResponse.json({ error: 'Fonctionnalité IA désactivée en mode démo pour éviter les surcoûts.' }, { status: 403 });
         }
 

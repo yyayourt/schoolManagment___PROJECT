@@ -3,6 +3,7 @@ import Classe from '../../../_/models/ai/Classe';
 import { NextResponse } from 'next/server';
 import { checkRole, Roles } from '../../../../../utils/roles';
 import { authWithFallback } from '../../../lib/authWithFallback';
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 export async function POST(request) {
   try {
@@ -17,9 +18,7 @@ export async function POST(request) {
 
     await dbConnect();
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     const classes = await Classe.find({ schoolKey });
     const results = [];

@@ -3,6 +3,7 @@ import { requireAuth } from '../../../lib/authWithFallback'
 import dbConnect from '../../../lib/dbConnect'
 
 const AttendanceEntry = require('../../../_/models/ai/AttendanceEntry')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 /**
  * GET /api/students/{id}/attendance
@@ -16,9 +17,7 @@ export async function GET(request, { params }) {
 
     await dbConnect()
     
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     const { id } = await params
     const mongoose = require('mongoose')

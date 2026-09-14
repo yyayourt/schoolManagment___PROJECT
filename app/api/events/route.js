@@ -5,6 +5,7 @@ import dbConnect from '../lib/dbConnect'
 
 const mongoose = require('mongoose')
 const EventModel = require('../_/models/ai/Event')
+import { resolveSchoolKey } from '../lib/schoolScope';
 
 const TYPES = ['SORTIE', 'EVALUATION', 'REUNION', 'FERMETURE', 'AUTRE']
 
@@ -42,8 +43,7 @@ export async function GET(request) {
       }
     }
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin'
+    const schoolKey = await resolveSchoolKey()
 
     const filter = { schoolKey, $or: scope }
 
@@ -81,8 +81,7 @@ export async function POST(request) {
     const body = await request.json()
     const { title, type, startDate, endDate, isGlobal, classId, location, description, notifyParents, hasVisio } = body || {}
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) {
       return NextResponse.json({ success: false, error: 'Accès refusé : schoolKey manquant' }, { status: 403 })
     }

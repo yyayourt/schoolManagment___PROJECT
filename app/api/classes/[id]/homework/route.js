@@ -7,6 +7,7 @@ const mongoose = require('mongoose')
 const HomeworkEntry = require('../../../_/models/ai/HomeworkEntry')
 const HomeworkCompletion = require('../../../_/models/ai/HomeworkCompletion')
 const User = require('../../../_/models/ai/User')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 /** Résout la fiche Teacher liée au compte Clerk connecté (ou null). */
 async function resolveTeacherId(clerkId) {
@@ -42,8 +43,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: 'classId invalide' }, { status: 400 })
     }
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) {
       return NextResponse.json({ success: false, error: 'Accès refusé : schoolKey manquant' }, { status: 403 })
     }

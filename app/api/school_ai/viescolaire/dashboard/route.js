@@ -4,6 +4,7 @@ import CarnetEntry from '../../../_/models/ai/CarnetEntry';
 import AttendanceEntry from '../../../_/models/ai/AttendanceEntry';
 import { NextResponse } from 'next/server';
 import { getAuthAndRole } from '../../../../../utils/roles';
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 export async function GET(request) {
   try {
@@ -14,9 +15,7 @@ export async function GET(request) {
 
     await dbConnect();
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     // 1. Incidents récents
     const recentIncidents = await Incident.find({ schoolKey })

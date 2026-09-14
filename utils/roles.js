@@ -103,7 +103,7 @@ export const getAuthAndRole = async (request) => {
     try {
         const authResult = await authWithFallback(request, 'getAuthAndRole');
         if (!authResult.success || !authResult.userId) {
-            return { success: false, userId: null, role: 'public', isAdmin: false, isTeacher: false };
+            return { success: false, userId: null, role: 'public', isAdmin: false, isTeacher: false, isSuperAdmin: false, dbSchoolKey: null };
         }
 
         const userId = authResult.userId;
@@ -117,7 +117,9 @@ export const getAuthAndRole = async (request) => {
                 userId,
                 role: mockRole,
                 isAdmin: mockRole === Roles.ADMIN,
-                isTeacher: mockRole === Roles.TEACHER
+                isTeacher: mockRole === Roles.TEACHER,
+                isSuperAdmin: false,
+                dbSchoolKey: null
             };
         }
 
@@ -128,7 +130,7 @@ export const getAuthAndRole = async (request) => {
             const email = clerkUser?.primaryEmailAddress?.emailAddress;
             const adminEmails = process.env.NEXT_PUBLIC_EMAIL_ADMIN?.split(' ') || [];
             if (email && adminEmails.includes(email)) {
-                return { success: true, userId, role: Roles.ADMIN, isAdmin: true, isTeacher: false };
+                return { success: true, userId, role: Roles.ADMIN, isAdmin: true, isTeacher: false, isSuperAdmin: true, dbSchoolKey: null };
             }
         } catch (e) {
             // Silence if currentUser is unavailable
@@ -136,7 +138,7 @@ export const getAuthAndRole = async (request) => {
 
         // 2. Fallback DB : Un seul appel findOne
         await dbConnect();
-        const mongoUser = await User.findOne({ clerkId: userId }).select('role');
+        const mongoUser = await User.findOne({ clerkId: userId }).select('role schoolKey');
         const userRole = mongoUser?.role || 'public';
 
         return {
@@ -144,10 +146,13 @@ export const getAuthAndRole = async (request) => {
             userId,
             role: userRole,
             isAdmin: userRole === Roles.ADMIN,
-            isTeacher: userRole === Roles.TEACHER
+            isTeacher: userRole === Roles.TEACHER,
+            isSuperAdmin: false,
+            // '' si le User existe sans clé ; null s'il n'y a pas de document
+            dbSchoolKey: mongoUser ? (mongoUser.schoolKey || '') : null
         };
     } catch (error) {
         console.error('Error in getAuthAndRole:', error);
-        return { success: false, userId: null, role: 'public', isAdmin: false, isTeacher: false };
+        return { success: false, userId: null, role: 'public', isAdmin: false, isTeacher: false, isSuperAdmin: false, dbSchoolKey: null };
     }
 };

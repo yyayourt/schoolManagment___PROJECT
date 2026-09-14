@@ -4,6 +4,7 @@ import Teacher from '../../_/models/ai/Teacher';
 import { checkRole, Roles } from '../../../../utils/roles';
 import { authWithFallback } from '../../lib/authWithFallback';
 import { NextResponse } from 'next/server';
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 export async function GET(request) {
   try {
@@ -12,9 +13,7 @@ export async function GET(request) {
       return authResult.response;
     }
     await dbConnect();
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
+    const schoolKey = await resolveSchoolKey();
 
     console.log(`[BACKEND ENSEIGNANTS] GET /api/school_ai/enseignants - UserID: ${authResult.userId}, schoolKey: ${schoolKey}`);
     const enseignants = await Teacher.find({ schoolKey });

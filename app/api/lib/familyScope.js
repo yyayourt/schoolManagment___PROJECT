@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getAuthAndRole } from '../../../utils/roles'
 import User from '../_/models/ai/User'
+import { resolveSchoolKey } from './schoolScope'
 
 /**
  * Résout les élèves qu'un utilisateur a le droit de consulter.
@@ -30,7 +31,9 @@ export async function resolveFamilyScope({ userId, role, isAdmin, isTeacher }) {
 
 /**
  * Authentifie puis résout le périmètre famille en une passe.
- * Renvoie soit `{ error: NextResponse }`, soit le périmètre exploitable.
+ * Renvoie soit `{ error: NextResponse }`, soit le périmètre exploitable,
+ * qui inclut `schoolKey` : l'école courante décidée côté serveur
+ * (cf. schoolScope.js), à utiliser à la place du cookie `x-school-key`.
  *
  * @param {Request} request
  * @param {{ staffOnly?: boolean, adminOnly?: boolean }} options
@@ -63,7 +66,8 @@ export async function requireFamilyScope(request, { staffOnly = false, adminOnly
     }
   }
 
-  return { auth, ...scope }
+  const schoolKey = await resolveSchoolKey(auth)
+  return { auth, ...scope, schoolKey }
 }
 
 /** `true` si le périmètre autorise la consultation de cet élève. */

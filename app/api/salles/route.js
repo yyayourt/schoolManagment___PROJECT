@@ -9,7 +9,7 @@ export async function GET(req) {
     if (scope.error) return scope.error;
 
     await dbConnect();
-    const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
+    const schoolKey = scope.schoolKey;
 
     let salles = await Salle.find({ schoolKey }).sort({ nom: 1 });
 
@@ -40,7 +40,7 @@ export async function POST(req) {
     if (scope.error) return scope.error;
 
     await dbConnect();
-    const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
+    const schoolKey = scope.schoolKey;
     const body = await req.json();
 
     const salle = await Salle.create({

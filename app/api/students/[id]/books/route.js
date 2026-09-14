@@ -5,6 +5,7 @@ import dbConnect from '../../../lib/dbConnect'
 const StudentBook = require('../../../_/models/ai/StudentBook')
 const ClassBook = require('../../../_/models/ai/ClassBook')
 const Classe = require('../../../_/models/ai/Classe')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 /**
  * GET /api/students/[id]/books
@@ -18,9 +19,7 @@ export async function GET(request, { params }) {
 
     await dbConnect()
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     const studentBooks = await StudentBook.find({ schoolKey, studentId: id })
       .populate({

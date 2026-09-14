@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from './dbConnect';
 import { authWithFallback } from './authWithFallback';
 import { checkRole, Roles } from '../../../utils/roles';
+import { resolveSchoolKey } from './schoolScope';
 
 /**
  * HOF factorisant le prologue d'authentification répété dans les routes API.
@@ -14,7 +15,7 @@ import { checkRole, Roles } from '../../../utils/roles';
  * puis appelle le handler avec le contexte enrichi.
  *
  * @param {(request: Request, ctx: object) => Promise<Response>} handler
- *   ctx = { ...ctxNext, userId, isAdmin, isTeacher } où ctxNext est l'objet
+ *   ctx = { ...ctxNext, userId, isAdmin, isTeacher, schoolKey } où ctxNext est l'objet
  *   passé par Next.js (contient `params` pour les routes dynamiques [id]).
  * @param {object} [options]
  * @param {string}  [options.context='API'] - libellé de log passé à authWithFallback.
@@ -40,6 +41,7 @@ export function withAuth(handler, options = {}) {
     }
 
     if (db) await dbConnect();
-    return handler(request, { ...ctx, userId, isAdmin, isTeacher });
+    const schoolKey = await resolveSchoolKey({ userId });
+    return handler(request, { ...ctx, userId, isAdmin, isTeacher, schoolKey });
   };
 }

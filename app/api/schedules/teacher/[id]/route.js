@@ -9,6 +9,7 @@ const Teacher = require('../../../_/models/ai/Teacher')
 const Classe = require('../../../_/models/ai/Classe')
 const User = require('../../../_/models/ai/User')
 const Subject = require('../../../_/models/ai/Subject')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 export async function GET(request, { params }) {
   try {
@@ -18,9 +19,7 @@ export async function GET(request, { params }) {
     }
 
     await dbConnect()
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     const { id } = await params
 

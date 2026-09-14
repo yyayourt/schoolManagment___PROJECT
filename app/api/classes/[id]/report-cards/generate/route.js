@@ -11,6 +11,7 @@ const Subject = require('../../../../_/models/ai/Subject')
 const ReportCard = require('../../../../_/models/ai/ReportCard')
 const User = require('../../../../_/models/ai/User')
 const Note = require('../../../../_/models/ai/Note')
+import { resolveSchoolKey } from '../../../../lib/schoolScope';
 
 const PERIODS = ['TRIMESTRE_1', 'TRIMESTRE_2', 'TRIMESTRE_3', 'ANNUEL']
 
@@ -43,8 +44,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: 'classId invalide' }, { status: 400 })
     }
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) {
       return NextResponse.json({ success: false, error: 'Accès refusé : schoolKey manquant' }, { status: 403 })
     }

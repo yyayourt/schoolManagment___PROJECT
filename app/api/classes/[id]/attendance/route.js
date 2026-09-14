@@ -7,6 +7,7 @@ const mongoose = require('mongoose')
 const AttendanceRecord = require('../../../_/models/ai/AttendanceRecord')
 const AttendanceEntry = require('../../../_/models/ai/AttendanceEntry')
 const User = require('../../../_/models/ai/User')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 const STATUSES = ['PRESENT', 'ABSENT', 'LATE', 'EXCUSED']
 const PERIODS = ['MATIN', 'APRES_MIDI']
@@ -50,8 +51,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: 'classId invalide' }, { status: 400 })
     }
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) {
       return NextResponse.json({ success: false, error: 'Accès refusé : schoolKey manquant' }, { status: 403 })
     }
@@ -166,9 +166,7 @@ export async function GET(request, { params }) {
 
     await dbConnect()
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     const { id: classId } = await params
     if (!mongoose.Types.ObjectId.isValid(classId)) {

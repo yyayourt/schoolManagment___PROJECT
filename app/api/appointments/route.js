@@ -6,6 +6,7 @@ import dbConnect from '../lib/dbConnect'
 const mongoose = require('mongoose')
 const Appointment = require('../_/models/ai/Appointment')
 const User = require('../_/models/ai/User')
+import { resolveSchoolKey } from '../lib/schoolScope';
 require('../_/models/ai/Eleve')
 require('../_/models/ai/Teacher')
 
@@ -43,8 +44,7 @@ export async function GET(request) {
     const status = searchParams.get('status')
     const direction = searchParams.get('direction')
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin'
+    const schoolKey = await resolveSchoolKey()
 
     let filter
     if (direction === 'sent') filter = { schoolKey, initiatorId: me }
@@ -142,8 +142,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Initiateur et destinataire identiques' }, { status: 400 })
     }
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) {
       return NextResponse.json({ success: false, error: 'Accès refusé : schoolKey manquant' }, { status: 403 })
     }

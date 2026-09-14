@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { checkRole, getAuthAndRole, Roles } from '../../../../utils/roles';
 import { authWithFallback } from '../../lib/authWithFallback';
 import User from '../../_/models/ai/User';
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 export async function GET(request) {
   try {
@@ -15,9 +16,7 @@ export async function GET(request) {
 
     await dbConnect();
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
+    const schoolKey = await resolveSchoolKey();
 
     console.log(`[BACKEND ELEVES] MONGODB_URI: ${process.env.MONGODB_URI?.split('@')[1] || 'N/A'}, schoolKey: ${schoolKey}`);
 

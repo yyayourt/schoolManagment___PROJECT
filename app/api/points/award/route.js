@@ -7,6 +7,7 @@ const PointLabel = require('../../_/models/ai/PointLabel')
 const PointTransaction = require('../../_/models/ai/PointTransaction')
 const Eleve = require('../../_/models/ai/Eleve')
 const User = require('../../_/models/ai/User')
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 /**
  * Résout la fiche Teacher liée au compte Clerk connecté.
@@ -39,8 +40,7 @@ export async function POST(request) {
     const body = await request.json()
     const { studentIds, labelId, amount, comment } = body || {}
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) {
       return NextResponse.json({ success: false, error: 'Accès refusé : schoolKey manquant' }, { status: 403 })
     }

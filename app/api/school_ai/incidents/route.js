@@ -11,9 +11,7 @@ export async function GET(request) {
 
     await dbConnect();
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = scope.schoolKey;
 
     const { searchParams } = new URL(request.url);
     const eleveId = searchParams.get('eleveId');
@@ -49,9 +47,7 @@ export async function POST(request) {
 
     await dbConnect();
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = scope.schoolKey;
 
     const body = await request.json();
 

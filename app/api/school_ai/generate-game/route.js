@@ -6,6 +6,7 @@ import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 
 const mongoose = require('mongoose');
 const EducationalGame = require('../../_/models/ai/EducationalGame');
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -23,9 +24,7 @@ export async function POST(request) {
     const authResult = await authWithFallback(request, 'POST /api/school_ai/generate-game');
     if (!authResult.success) return authResult.response;
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    if (cookieStore.get('x-school-key')?.value === 'demo_master') {
+    if ((await resolveSchoolKey()) === 'demo_master') {
         return NextResponse.json({ error: 'Fonctionnalité IA désactivée en mode démo pour éviter les surcoûts.' }, { status: 403 });
     }
 

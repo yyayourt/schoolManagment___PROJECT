@@ -17,7 +17,9 @@ Le dernier point est le cœur des trois chantiers ci-dessous.
 
 ---
 
-## Chantier A — Cloisonnement par `schoolKey` côté serveur (priorité 1)
+## Chantier A — Cloisonnement par `schoolKey` côté serveur — ✅ FAIT (2026-09-14)
+
+> Livré : `app/api/lib/schoolScope.js` (`resolveSchoolKey`), exposé par `requireFamilyScope` (`scope.schoolKey`), `withAuth` (`ctx.schoolKey`) et `getAuthAndRole` (`isSuperAdmin`, `dbSchoolKey`) ; 40 routes migrées (plus aucune lecture directe du cookie hors `sync-user`, qui lie légitimement un bac à sable à l'inscription) ; raccourci anonyme → prod retiré du middleware. Reste : le scénario Playwright de l'étape 5.
 
 ### Constat
 - 43 fichiers sous `app/api` lisent `cookies().get('x-school-key')` (ou l'en-tête) et l'utilisent

@@ -6,6 +6,7 @@ import Eleve from '../../_/models/ai/Eleve';
 import Teacher from '../../_/models/ai/Teacher';
 import Subject from '../../_/models/ai/Subject';
 import SchoolSettings from '../../_/models/ai/SchoolSettings';
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 export async function GET(request) {
   try {
@@ -17,9 +18,7 @@ export async function GET(request) {
 
     await dbConnect();
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
+    const schoolKey = await resolveSchoolKey();
 
     // 2. Exécution PARALLÈLE de toutes les requêtes en base de données
     const [classes, eleves, enseignants, rawSubjects, settings] = await Promise.all([

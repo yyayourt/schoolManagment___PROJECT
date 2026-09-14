@@ -6,6 +6,7 @@ import Eleve from '../../_/models/ai/Eleve';
 import { checkRole, Roles } from '../../../../utils/roles';
 import { authWithFallback } from '../../lib/authWithFallback';
 import { sanitizeHomepageTheme } from '../../../../utils/themeSanitizer';
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 export async function GET(request) {
   try {
@@ -21,9 +22,7 @@ export async function GET(request) {
 
     await dbConnect();
     
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
+    const schoolKey = await resolveSchoolKey();
 
     const settings = await SchoolSettings.findOne({ schoolKey });
 
@@ -99,9 +98,7 @@ export async function PUT(request) {
       console.log(`🧹 Nettoyage cascade: clé "${key}" retirée de tous les élèves.`);
     }
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
+    const schoolKey = await resolveSchoolKey();
 
     const updated = await SchoolSettings.findOneAndUpdate(
       { schoolKey },

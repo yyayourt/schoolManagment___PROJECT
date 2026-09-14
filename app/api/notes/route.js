@@ -6,6 +6,7 @@ import { getAuthAndRole } from '../../../utils/roles'
 import { resolveFamilyScope } from '../lib/familyScope'
 
 const Note = require('../_/models/ai/Note')
+import { resolveSchoolKey } from '../lib/schoolScope';
 
 /**
  * GET /api/notes?eleveId=…&limit=…
@@ -20,8 +21,7 @@ export async function GET(request) {
     }
 
     await dbConnect()
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin'
+    const schoolKey = await resolveSchoolKey()
 
     const { searchParams } = new URL(request.url)
     const eleveId = searchParams.get('eleveId')
@@ -53,8 +53,7 @@ export async function POST(request) {
     if (!authResult.success) return authResult.response
 
     await dbConnect()
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
 
     const { notes, devoirId } = await request.json()

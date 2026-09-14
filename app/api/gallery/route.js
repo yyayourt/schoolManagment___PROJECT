@@ -7,6 +7,7 @@ import { academicYearOf } from '../lib/academicYear'
 import { signedUrl } from '../lib/cloudinaryMedia'
 
 const MediaAlbum = require('../_/models/ai/MediaAlbum')
+import { resolveSchoolKey } from '../lib/schoolScope';
 require('../_/models/ai/Classe')
 
 // Miniature signée de couverture (petite). Null si pas d'image ou fallback non signable.
@@ -38,8 +39,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const year = searchParams.get('year') || academicYearOf()
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin'
+    const schoolKey = await resolveSchoolKey()
 
     const albums = await MediaAlbum.find({ schoolKey, academicYear: year, 'images.0': { $exists: true } })
       .populate('classId', 'niveau alias annee')

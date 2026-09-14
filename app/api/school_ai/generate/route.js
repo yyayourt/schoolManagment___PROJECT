@@ -5,7 +5,7 @@ import { normaliserConfiguration, genererEcole } from '../../lib/schoolGenerator
 
 /**
  * POST /api/school_ai/generate
- * Peuple l'école courante (cookie `x-school-key`) à partir du formulaire de
+ * Peuple l'école courante (décidée côté serveur, cf. schoolScope.js) à partir du formulaire de
  * génération de l'administration : matières, enseignants, classes, élèves,
  * et en option notes + emplois du temps. Les entités existantes sont
  * conservées, les nouvelles s'y ajoutent.
@@ -27,9 +27,7 @@ export async function POST(request) {
 
     await dbConnect();
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = scope.schoolKey;
 
     const result = await genererEcole(config, {
       schoolKey,

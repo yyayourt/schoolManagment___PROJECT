@@ -11,7 +11,7 @@ export async function GET(req) {
     if (scope.error) return scope.error;
 
     await dbConnect();
-    const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
+    const schoolKey = scope.schoolKey;
 
     const { searchParams } = new URL(req.url);
     const eleveId = searchParams.get('eleveId');
@@ -52,7 +52,7 @@ export async function POST(req) {
     if (scope.error) return scope.error;
 
     await dbConnect();
-    const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
+    const schoolKey = scope.schoolKey;
     const body = await req.json();
 
     const { eleveId, annee = '2023-2024', evaluations, appreciationGlobale } = body;

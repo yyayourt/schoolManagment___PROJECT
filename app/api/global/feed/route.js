@@ -5,6 +5,7 @@ import dbConnect from '../../lib/dbConnect'
 
 const Post = require('../../_/models/ai/Post')
 const User = require('../../_/models/ai/User')
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 /**
  * GET /api/global/feed
@@ -17,8 +18,7 @@ export async function GET(request) {
 
     await dbConnect()
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin'
+    const schoolKey = await resolveSchoolKey()
 
     const posts = await Post.find({ schoolKey, isGlobal: true }).sort({ createdAt: -1 })
 
@@ -96,8 +96,7 @@ export async function POST(request) {
     // Récupérer le nom de l'auteur
     const authorName = currentUserDoc ? `${currentUserDoc.firstName} ${currentUserDoc.lastName}`.trim() || currentUserDoc.email : 'Enseignant'
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) {
       return NextResponse.json({ error: 'Accès refusé : schoolKey manquant' }, { status: 403 })
     }

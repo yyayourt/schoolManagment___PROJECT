@@ -6,6 +6,7 @@ import dbConnect from '../../../lib/dbConnect'
 const mongoose = require('mongoose')
 const Conversation = require('../../../_/models/ai/Conversation')
 const Message = require('../../../_/models/ai/Message')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 /**
  * GET /api/conversations/{id}/messages
@@ -38,8 +39,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 })
     }
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin'
+    const schoolKey = await resolveSchoolKey()
 
     // Marquer comme lus les messages reçus non encore lus.
     await Message.updateMany(
@@ -92,8 +92,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: 'Message trop long (4000 max)' }, { status: 400 })
     }
 
-    const cookieStore = await cookies()
-    const schoolKey = cookieStore.get('x-school-key')?.value
+    const schoolKey = await resolveSchoolKey()
     if (!schoolKey) {
       return NextResponse.json({ success: false, error: 'Accès refusé : schoolKey manquant' }, { status: 403 })
     }

@@ -6,6 +6,7 @@ import dbConnect from '../../../lib/dbConnect'
 const Classe = require('../../../_/models/ai/Classe')
 const ClassBook = require('../../../_/models/ai/ClassBook')
 const User = require('../../../_/models/ai/User')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 /**
  * GET /api/classes/[id]/classbook
@@ -31,8 +32,7 @@ export async function GET(request, { params }) {
 
     // S'il n'existe pas, l'initialiser
     if (!classBook) {
-      const cookieStore = await cookies()
-      const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin'
+      const schoolKey = await resolveSchoolKey()
 
       const title = `Livre de Classe - ${classe.niveau} ${classe.alias} (${schoolYear})`
       classBook = new ClassBook({
@@ -94,8 +94,7 @@ export async function PUT(request, { params }) {
     // Chercher et mettre à jour le livre
     let classBook = await ClassBook.findOne({ classId: id, schoolYear })
     if (!classBook) {
-      const cookieStore = await cookies()
-      const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin'
+      const schoolKey = await resolveSchoolKey()
 
       classBook = new ClassBook({
         schoolKey,

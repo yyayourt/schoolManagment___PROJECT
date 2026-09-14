@@ -4,6 +4,7 @@ import dbConnect from '../../../lib/dbConnect'
 
 const mongoose = require('mongoose')
 const ReportCard = require('../../../_/models/ai/ReportCard')
+import { resolveSchoolKey } from '../../../lib/schoolScope';
 
 /**
  * GET /api/students/{id}/report-cards
@@ -16,9 +17,7 @@ export async function GET(request, { params }) {
 
     await dbConnect()
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = await resolveSchoolKey();
 
     const { id } = await params
     if (!mongoose.Types.ObjectId.isValid(id)) {

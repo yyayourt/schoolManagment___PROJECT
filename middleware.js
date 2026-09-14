@@ -25,12 +25,12 @@ export default clerkMiddleware(async (auth, request) => {
 
   if (tenantMode === 'sandbox' || (schoolKey && schoolKey.startsWith('sandbox_'))) {
     tenantDb = 'sandbox';
-  } else if (schoolKey === 'ecole_st_martin') {
-    tenantDb = 'prod';
   } else {
-    // Si pas de clé explicite, on vérifie l'auth Clerk
+    // La production exige un compte Clerk : tout anonyme est forcé en sandbox,
+    // quel que soit le cookie x-school-key (l'école courante est ensuite
+    // décidée côté serveur, cf. app/api/lib/schoolScope.js).
     const authObj = await auth();
-    if (!authObj.userId) { // On force la sandbox pour tout utilisateur non connecté (même s'il a un mockRole)
+    if (!authObj.userId) {
       tenantDb = 'sandbox';
     }
   }

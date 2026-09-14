@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { checkRole, getAuthAndRole, Roles } from '../../../../utils/roles';
 import { authWithFallback } from '../../lib/authWithFallback';
 import User from '../../_/models/ai/User';
+import { resolveSchoolKey } from '../../lib/schoolScope';
 
 export async function GET(request) {
   try {
@@ -13,9 +14,7 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Accès refusé' }, { status: 401 });
     }
 
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
+    const schoolKey = await resolveSchoolKey();
 
     console.log(`[DEBUG CLASSES] Requête reçue. UserID: ${userId}, isAdmin: ${isAdmin}, isTeacher: ${isTeacher}`);
     console.log(`[DEBUG CLASSES] schoolKey: ${schoolKey}`);
