@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../lib/dbConnect';
+import { requireFamilyScope } from '../../lib/familyScope';
 import User from '../../_/models/ai/User';
 import Institution from '../../_/models/ai/Institution';
 import SchoolSettings from '../../_/models/ai/SchoolSettings';
 
 export async function GET(request) {
   try {
+    // Action d'administration (super-admin) : refusée à tout non-admin.
+    const scope = await requireFamilyScope(request, { adminOnly: true });
+    if (scope.error) return scope.error;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const schoolName = searchParams.get('schoolName') || 'Nouvel Établissement';

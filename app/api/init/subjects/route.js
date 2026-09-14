@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../lib/dbConnect';
+import { requireFamilyScope } from '../../lib/familyScope';
 const Subject = require('../../_/models/ai/Subject');
 import { MATIERES_SCOLAIRES } from '../../../../utils/matieres';
 
 /**
  * POST /api/init/subjects
- * Route d'initialisation publique pour créer les matières par défaut
+ * Route d'initialisation (personnel uniquement) pour créer les matières par défaut
  * À utiliser uniquement lors de la première configuration
  */
 export async function POST(request) {
   try {
+    const scope = await requireFamilyScope(request, { staffOnly: true });
+    if (scope.error) return scope.error;
+
     await dbConnect();
 
     // Vérifier si des matières existent déjà
@@ -87,10 +91,13 @@ export async function POST(request) {
 
 /**
  * GET /api/init/subjects
- * Vérifier l'état d'initialisation (route publique)
+ * Vérifier l'état d'initialisation (personnel uniquement)
  */
 export async function GET(request) {
   try {
+    const scope = await requireFamilyScope(request, { staffOnly: true });
+    if (scope.error) return scope.error;
+
     await dbConnect();
 
     const existingCount = await Subject.countDocuments();

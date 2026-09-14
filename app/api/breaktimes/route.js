@@ -97,4 +97,4 @@ export const POST = withAuth(async (request) => {
       error: 'Erreur serveur lors de la création de la pause'
     }, { status: 500 });
   }
-}, { context: 'POST /api/breaktimes' });
+}, { context: 'POST /api/breaktimes', anyRole: true });

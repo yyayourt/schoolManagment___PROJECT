@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../lib/dbConnect';
 import Salle from '../_/models/ai/Salle';
+import { requireFamilyScope } from '../lib/familyScope';
 
 export async function GET(req) {
   try {
+    const scope = await requireFamilyScope(req);
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
 
@@ -32,6 +36,9 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const scope = await requireFamilyScope(req, { staffOnly: true });
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
     const body = await req.json();

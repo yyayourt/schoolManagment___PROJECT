@@ -33,15 +33,26 @@ export async function resolveFamilyScope({ userId, role, isAdmin, isTeacher }) {
  * Renvoie soit `{ error: NextResponse }`, soit le périmètre exploitable.
  *
  * @param {Request} request
- * @param {{ staffOnly?: boolean }} options - staffOnly : refuse les familles (403).
+ * @param {{ staffOnly?: boolean, adminOnly?: boolean }} options
+ *   - staffOnly : refuse les familles (403).
+ *   - adminOnly : refuse tout sauf un administrateur (403), y compris les profs.
  */
-export async function requireFamilyScope(request, { staffOnly = false } = {}) {
+export async function requireFamilyScope(request, { staffOnly = false, adminOnly = false } = {}) {
   const auth = await getAuthAndRole(request)
   if (!auth.success) {
     return { error: NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 }) }
   }
 
   const scope = await resolveFamilyScope(auth)
+
+  if (adminOnly && !auth.isAdmin) {
+    return {
+      error: NextResponse.json(
+        { success: false, error: 'Accès non autorisé (Réservé aux administrateurs)' },
+        { status: 403 }
+      ),
+    }
+  }
 
   if (staffOnly && !scope.isStaff) {
     return {
