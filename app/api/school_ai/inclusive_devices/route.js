@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../lib/dbConnect';
+import { requireFamilyScope, canAccessStudent, forbiddenStudent, narrowToScope } from '../../lib/familyScope';
 import InclusiveDeviceRaw from '../../_/models/ai/InclusiveDevice';
 import EleveRaw from '../../_/models/ai/Eleve';
 import ClasseRaw from '../../_/models/ai/Classe';
@@ -11,6 +12,10 @@ const Classe = ClasseRaw.default || ClasseRaw;
 
 export async function GET(req) {
   try {
+    // Lecture réservée aux comptes connectés ; une famille ne voit que ses enfants.
+    const scope = await requireFamilyScope(req);
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
 
@@ -20,6 +25,7 @@ export async function GET(req) {
     const annee = searchParams.get('annee') || '2023-2024';
 
     if (eleveId) {
+      if (!canAccessStudent(scope, eleveId)) return forbiddenStudent();
       const data = await InclusiveDevice.findOne({ schoolKey, eleveId, annee });
       return NextResponse.json({ success: true, data });
     }
@@ -27,22 +33,30 @@ export async function GET(req) {
     if (classeId) {
       const eleves = await Eleve.find({ current_classe: classeId });
       const eleveIds = eleves.map(e => e._id);
+      const scopedIds = narrowToScope(scope, eleveIds);
 
       let list = await InclusiveDevice.find({
         schoolKey,
         annee,
-        eleveId: { $in: eleveIds }
+        eleveId: { $in: scopedIds }
       });
 
-      // Auto-génération des données de démonstration pour les clés démo si vide
-      if (list.length === 0 && eleves.length > 0 && ['ecole_st_martin', 'demo_master'].includes(schoolKey)) {
+      // Auto-génération des données de démonstration pour les clés démo si vide.
+      // Le test porte sur la classe entière, pas sur la liste restreinte au
+      // périmètre famille : sinon une lecture parent relancerait le seeding.
+      const existingForClass = await InclusiveDevice.countDocuments({
+        schoolKey,
+        annee,
+        eleveId: { $in: eleveIds }
+      });
+      if (existingForClass === 0 && eleves.length > 0 && ['ecole_st_martin', 'demo_master'].includes(schoolKey)) {
         const classeDoc = await Classe.findById(classeId);
         if (classeDoc) {
           await generateInclusiveDevicesForClassYear(classeDoc, eleves, annee, schoolKey);
           list = await InclusiveDevice.find({
             schoolKey,
             annee,
-            eleveId: { $in: eleveIds }
+            eleveId: { $in: scopedIds }
           });
         }
       }
@@ -59,6 +73,10 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    // Écriture réservée au personnel éducatif.
+    const scope = await requireFamilyScope(req, { staffOnly: true });
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
     const body = await req.json();

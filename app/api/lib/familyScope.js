@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server'
+import { getAuthAndRole } from '../../../utils/roles'
 import User from '../_/models/ai/User'
 
 /**
@@ -24,4 +26,52 @@ export async function resolveFamilyScope({ userId, role, isAdmin, isTeacher }) {
 
   if (ids.length === 0) return { allowedStudentIds: null, isStaff: false, sandbox: true }
   return { allowedStudentIds: ids.map(String), isStaff: false }
+}
+
+/**
+ * Authentifie puis résout le périmètre famille en une passe.
+ * Renvoie soit `{ error: NextResponse }`, soit le périmètre exploitable.
+ *
+ * @param {Request} request
+ * @param {{ staffOnly?: boolean }} options - staffOnly : refuse les familles (403).
+ */
+export async function requireFamilyScope(request, { staffOnly = false } = {}) {
+  const auth = await getAuthAndRole(request)
+  if (!auth.success) {
+    return { error: NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 }) }
+  }
+
+  const scope = await resolveFamilyScope(auth)
+
+  if (staffOnly && !scope.isStaff) {
+    return {
+      error: NextResponse.json(
+        { success: false, error: 'Accès non autorisé (Réservé au personnel éducatif)' },
+        { status: 403 }
+      ),
+    }
+  }
+
+  return { auth, ...scope }
+}
+
+/** `true` si le périmètre autorise la consultation de cet élève. */
+export function canAccessStudent(scope, eleveId) {
+  if (!scope.allowedStudentIds) return true
+  return scope.allowedStudentIds.includes(String(eleveId))
+}
+
+/** Réponse 403 standard sur un élève hors périmètre. */
+export function forbiddenStudent() {
+  return NextResponse.json({ success: false, error: 'Accès non autorisé à cet élève' }, { status: 403 })
+}
+
+/**
+ * Restreint une liste d'ids d'élèves (typiquement ceux d'une classe) au
+ * périmètre autorisé. Une famille qui interroge une classe entière ne
+ * reçoit donc que ses propres enfants.
+ */
+export function narrowToScope(scope, eleveIds) {
+  if (!scope.allowedStudentIds) return eleveIds
+  return eleveIds.filter((id) => scope.allowedStudentIds.includes(String(id)))
 }

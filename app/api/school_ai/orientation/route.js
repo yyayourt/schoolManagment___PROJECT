@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../lib/dbConnect';
+import { requireFamilyScope, canAccessStudent, forbiddenStudent, narrowToScope } from '../../lib/familyScope';
 import Orientation3emeRaw from '../../_/models/ai/Orientation3eme';
 import EleveRaw from '../../_/models/ai/Eleve';
 
@@ -8,6 +9,10 @@ const Eleve = EleveRaw.default || EleveRaw;
 
 export async function GET(req) {
   try {
+    // Lecture réservée aux comptes connectés ; une famille ne voit que ses enfants.
+    const scope = await requireFamilyScope(req);
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
 
@@ -17,6 +22,7 @@ export async function GET(req) {
     const annee = searchParams.get('annee') || '2023-2024';
 
     if (eleveId) {
+      if (!canAccessStudent(scope, eleveId)) return forbiddenStudent();
       const data = await Orientation3eme.findOne({ schoolKey, eleveId, annee });
       return NextResponse.json({ success: true, data });
     }
@@ -24,21 +30,28 @@ export async function GET(req) {
     if (classeId) {
       const eleves = await Eleve.find({ current_classe: classeId });
       const eleveIds = eleves.map(e => e._id);
+      const scopedIds = narrowToScope(scope, eleveIds);
 
       let list = await Orientation3eme.find({
         schoolKey,
         annee,
-        eleveId: { $in: eleveIds }
+        eleveId: { $in: scopedIds }
       });
 
-      // Auto-seeding si vide pour l'environnement démo
-      if (list.length === 0 && eleves.length > 0 && ['ecole_st_martin', 'demo_master'].includes(schoolKey)) {
+      // Auto-seeding si vide pour l'environnement démo. Le test porte sur la
+      // classe entière : sinon une lecture parent relancerait le seeding.
+      const existingForClass = await Orientation3eme.countDocuments({
+        schoolKey,
+        annee,
+        eleveId: { $in: eleveIds }
+      });
+      if (existingForClass === 0 && eleves.length > 0 && ['ecole_st_martin', 'demo_master'].includes(schoolKey)) {
         const { generateOrientationForClassYear } = await import('../../admin/reset-demo/lib/orientationSeeder');
         await generateOrientationForClassYear({ niveau: '3ème' }, eleves, annee, schoolKey);
         list = await Orientation3eme.find({
           schoolKey,
           annee,
-          eleveId: { $in: eleveIds }
+          eleveId: { $in: scopedIds }
         });
       }
 
@@ -54,6 +67,9 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const scope = await requireFamilyScope(req);
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
     const body = await req.json();
@@ -71,16 +87,21 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'eleveId est requis' }, { status: 400 });
     }
 
+    if (!canAccessStudent(scope, eleveId)) return forbiddenStudent();
+
+    // Une famille saisit ses vœux (cf. §16 de la spec collège) mais ne décide
+    // ni de l'avis du conseil, ni de la décision du chef d'établissement,
+    // ni du compte rendu d'entretien : ces champs restent au personnel.
+    const $set = { voeuxFamille: voeuxFamille || [] };
+    if (scope.isStaff) {
+      $set.avisConseilClasse = avisConseilClasse || { avis: 'EN_ATTENTE', commentaire: '' };
+      $set.decisionChefEtablissement = decisionChefEtablissement || { voieRetenue: 'EN_ATTENTE', accordFamille: false };
+      $set.entretienOrientation = entretienOrientation || { realise: false, compteRendu: '' };
+    }
+
     const updatedData = await Orientation3eme.findOneAndUpdate(
       { schoolKey, eleveId, annee },
-      {
-        $set: {
-          voeuxFamille: voeuxFamille || [],
-          avisConseilClasse: avisConseilClasse || { avis: 'EN_ATTENTE', commentaire: '' },
-          decisionChefEtablissement: decisionChefEtablissement || { voieRetenue: 'EN_ATTENTE', accordFamille: false },
-          entretienOrientation: entretienOrientation || { realise: false, compteRendu: '' }
-        }
-      },
+      { $set },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 

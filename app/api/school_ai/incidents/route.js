@@ -2,13 +2,12 @@ import dbConnect from '../../lib/dbConnect';
 import Incident from '../../_/models/ai/Incident';
 import { NextResponse } from 'next/server';
 import { getAuthAndRole } from '../../../../utils/roles';
+import { requireFamilyScope, canAccessStudent, forbiddenStudent } from '../../lib/familyScope';
 
 export async function GET(request) {
   try {
-    const { success } = await getAuthAndRole(request);
-    if (!success) {
-      return NextResponse.json({ error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const scope = await requireFamilyScope(request);
+    if (scope.error) return scope.error;
 
     await dbConnect();
 
@@ -20,8 +19,13 @@ export async function GET(request) {
     const eleveId = searchParams.get('eleveId');
     const classeId = searchParams.get('classeId');
 
+    if (eleveId && !canAccessStudent(scope, eleveId)) return forbiddenStudent();
+
     const query = { schoolKey };
     if (eleveId) query.eleveId = eleveId;
+    // Une famille ne voit que les incidents de ses enfants, y compris lorsqu'elle
+    // interroge une classe entière.
+    else if (scope.allowedStudentIds) query.eleveId = { $in: scope.allowedStudentIds };
     if (classeId) query.classeId = classeId;
 
     const incidents = await Incident.find(query)
@@ -84,10 +88,8 @@ export async function POST(request) {
 
 export async function PATCH(request) {
   try {
-    const { success } = await getAuthAndRole(request);
-    if (!success) {
-      return NextResponse.json({ error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const scope = await requireFamilyScope(request);
+    if (scope.error) return scope.error;
 
     await dbConnect();
     const body = await request.json();
@@ -96,6 +98,13 @@ export async function PATCH(request) {
     if (!id) {
       return NextResponse.json({ error: 'L ID de l incident est requis' }, { status: 400 });
     }
+
+    // Un parent ne prend acte que des sanctions de ses propres enfants.
+    const target = await Incident.findById(id).select('eleveId');
+    if (!target) {
+      return NextResponse.json({ error: 'Incident non trouvé' }, { status: 404 });
+    }
+    if (!canAccessStudent(scope, target.eleveId)) return forbiddenStudent();
 
     const updatedIncident = await Incident.findByIdAndUpdate(
       id,

@@ -2,13 +2,12 @@ import dbConnect from '../../lib/dbConnect';
 import CarnetEntry from '../../_/models/ai/CarnetEntry';
 import { NextResponse } from 'next/server';
 import { getAuthAndRole } from '../../../../utils/roles';
+import { requireFamilyScope, canAccessStudent, forbiddenStudent } from '../../lib/familyScope';
 
 export async function GET(request) {
   try {
-    const { success } = await getAuthAndRole(request);
-    if (!success) {
-      return NextResponse.json({ error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const scope = await requireFamilyScope(request);
+    if (scope.error) return scope.error;
 
     await dbConnect();
 
@@ -19,8 +18,13 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const eleveId = searchParams.get('eleveId');
 
+    if (eleveId && !canAccessStudent(scope, eleveId)) return forbiddenStudent();
+
     const query = { schoolKey };
     if (eleveId) query.eleveId = eleveId;
+    // Sans eleveId, une famille ne reçoit que le carnet de ses propres enfants
+    // (sinon la requête renvoyait tout l'établissement).
+    else if (scope.allowedStudentIds) query.eleveId = { $in: scope.allowedStudentIds };
 
     const entries = await CarnetEntry.find(query)
       .populate('eleveId', 'nom prenoms current_classe photo')
@@ -34,10 +38,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const { success } = await getAuthAndRole(request);
-    if (!success) {
-      return NextResponse.json({ error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const scope = await requireFamilyScope(request);
+    if (scope.error) return scope.error;
 
     await dbConnect();
 
@@ -50,6 +52,9 @@ export async function POST(request) {
     if (!body.eleveId || !body.auteurId || !body.contenu) {
       return NextResponse.json({ error: 'Les champs eleveId, auteurId et contenu sont requis' }, { status: 400 });
     }
+
+    // Un parent répond au carnet de ses propres enfants, pas à celui des autres.
+    if (!canAccessStudent(scope, body.eleveId)) return forbiddenStudent();
 
     const newEntry = await CarnetEntry.create({
       schoolKey,
@@ -75,10 +80,8 @@ export async function POST(request) {
 
 export async function PATCH(request) {
   try {
-    const { success } = await getAuthAndRole(request);
-    if (!success) {
-      return NextResponse.json({ error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const scope = await requireFamilyScope(request);
+    if (scope.error) return scope.error;
 
     await dbConnect();
     const body = await request.json();
@@ -87,6 +90,13 @@ export async function PATCH(request) {
     if (!id) {
       return NextResponse.json({ error: 'L ID du mot de carnet est requis' }, { status: 400 });
     }
+
+    // Un parent ne signe que les mots de carnet de ses propres enfants.
+    const target = await CarnetEntry.findById(id).select('eleveId');
+    if (!target) {
+      return NextResponse.json({ error: 'Mot de carnet non trouvé' }, { status: 404 });
+    }
+    if (!canAccessStudent(scope, target.eleveId)) return forbiddenStudent();
 
     if (updates.signatureParent === true && !updates.dateSignature) {
       updates.dateSignature = new Date();

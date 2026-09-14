@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../lib/dbConnect';
+import { requireFamilyScope, canAccessStudent, forbiddenStudent, narrowToScope } from '../../lib/familyScope';
 import DnbSimulation from '../../_/models/ai/DnbSimulation';
 import SocleEvaluation from '../../_/models/ai/SocleEvaluation';
 import Eleve from '../../_/models/ai/Eleve';
@@ -15,6 +16,10 @@ function getMentionDnb(scoreTotal) {
 
 export async function GET(req) {
   try {
+    // Lecture réservée aux comptes connectés ; une famille ne voit que ses enfants.
+    const scope = await requireFamilyScope(req);
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
 
@@ -24,6 +29,7 @@ export async function GET(req) {
     const annee = searchParams.get('annee') || '2023-2024';
 
     if (eleveId) {
+      if (!canAccessStudent(scope, eleveId)) return forbiddenStudent();
       const dnbData = await DnbSimulation.findOne({ schoolKey, eleveId, annee });
       const socleData = await SocleEvaluation.findOne({ schoolKey, eleveId, annee });
 
@@ -39,17 +45,18 @@ export async function GET(req) {
     if (classeId) {
       const eleves = await Eleve.find({ current_classe: classeId }, '_id');
       const eleveIds = eleves.map(e => e._id);
+      const scopedIds = narrowToScope(scope, eleveIds);
 
       const dnbList = await DnbSimulation.find({
         schoolKey,
         annee,
-        eleveId: { $in: eleveIds }
+        eleveId: { $in: scopedIds }
       });
 
       const socleList = await SocleEvaluation.find({
         schoolKey,
         annee,
-        eleveId: { $in: eleveIds }
+        eleveId: { $in: scopedIds }
       });
 
       return NextResponse.json({
@@ -70,6 +77,10 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    // Écriture réservée au personnel éducatif.
+    const scope = await requireFamilyScope(req, { staffOnly: true });
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
     const body = await req.json();

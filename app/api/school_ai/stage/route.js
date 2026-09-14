@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../lib/dbConnect';
+import { requireFamilyScope, canAccessStudent, forbiddenStudent, narrowToScope } from '../../lib/familyScope';
 import Stage3emeRaw from '../../_/models/ai/Stage3eme';
 import EleveRaw from '../../_/models/ai/Eleve';
 import ClasseRaw from '../../_/models/ai/Classe';
@@ -13,6 +14,10 @@ const Teacher = TeacherRaw.default || TeacherRaw;
 
 export async function GET(req) {
   try {
+    // Lecture réservée aux comptes connectés ; une famille ne voit que ses enfants.
+    const scope = await requireFamilyScope(req);
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
 
@@ -22,6 +27,7 @@ export async function GET(req) {
     const annee = searchParams.get('annee') || '2023-2024';
 
     if (eleveId) {
+      if (!canAccessStudent(scope, eleveId)) return forbiddenStudent();
       const data = await Stage3eme.findOne({ schoolKey, eleveId, annee });
       return NextResponse.json({ success: true, data });
     }
@@ -29,15 +35,23 @@ export async function GET(req) {
     if (classeId) {
       const eleves = await Eleve.find({ current_classe: classeId });
       const eleveIds = eleves.map(e => e._id);
+      const scopedIds = narrowToScope(scope, eleveIds);
 
       let list = await Stage3eme.find({
         schoolKey,
         annee,
-        eleveId: { $in: eleveIds }
+        eleveId: { $in: scopedIds }
       });
 
-      // Auto-génération des données de démonstration de stage de 3ème si aucune donnée n'existe encore
-      if (list.length === 0 && eleves.length > 0 && ['ecole_st_martin', 'demo_master'].includes(schoolKey)) {
+      // Auto-génération des données de démonstration de stage de 3ème si aucune
+      // donnée n'existe encore. Le test porte sur la classe entière : sinon une
+      // lecture parent relancerait le seeding.
+      const existingForClass = await Stage3eme.countDocuments({
+        schoolKey,
+        annee,
+        eleveId: { $in: eleveIds }
+      });
+      if (existingForClass === 0 && eleves.length > 0 && ['ecole_st_martin', 'demo_master'].includes(schoolKey)) {
         const classeDoc = await Classe.findById(classeId);
         if (classeDoc && (classeDoc.niveau === '3ème' || !classeDoc.niveau)) {
           const teachersList = await Teacher.find({ schoolKey });
@@ -52,7 +66,7 @@ export async function GET(req) {
           list = await Stage3eme.find({
             schoolKey,
             annee,
-            eleveId: { $in: eleveIds }
+            eleveId: { $in: scopedIds }
           });
         }
       }
@@ -69,6 +83,9 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const scope = await requireFamilyScope(req);
+    if (scope.error) return scope.error;
+
     await dbConnect();
     const schoolKey = req.headers.get('x-school-key') || 'ecole_st_martin';
     const body = await req.json();
@@ -102,20 +119,23 @@ export async function POST(req) {
       }
     }
 
+    if (!canAccessStudent(scope, eleveId)) return forbiddenStudent();
+
+    // La famille renseigne l'entreprise et les dates ; le suivi de visite et
+    // l'évaluation (notes, moyenne) restent la main du personnel.
+    const $set = {
+      entreprise: entreprise || {},
+      dates: dates || {},
+      statutConvention: statutConvention || 'EN_ATTENTE_RECHERCHE',
+    };
+    if (scope.isStaff) {
+      $set.suiviVisite = suiviVisite || {};
+      $set.evaluation = { ...evaluation, moyenneStage };
+    }
+
     const updatedData = await Stage3eme.findOneAndUpdate(
       { schoolKey, eleveId, annee },
-      {
-        $set: {
-          entreprise: entreprise || {},
-          dates: dates || {},
-          statutConvention: statutConvention || 'EN_ATTENTE_RECHERCHE',
-          suiviVisite: suiviVisite || {},
-          evaluation: {
-            ...evaluation,
-            moyenneStage
-          }
-        }
-      },
+      { $set },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
