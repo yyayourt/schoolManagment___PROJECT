@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { authWithFallback, getUserId } from '../lib/authWithFallback';
-import { currentUser, clerkClient } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import dbConnect from '../lib/dbConnect';
 import User from '../_/models/ai/User';
 import { determineUserRole, buildRoleData } from '../lib/determineUserRole';
@@ -21,6 +20,20 @@ export async function POST(request) {
         { error: 'Données utilisateur manquantes (clerkId, email requis)' },
         { status: 400 }
       );
+    }
+
+    // Un utilisateur ne peut synchroniser QUE son propre compte Clerk : sans
+    // cette vérification, n'importe qui pouvait créer ou réécrire le document
+    // User d'un clerkId arbitraire (et donc son rôle, dérivé de l'e-mail fourni).
+    // On interroge Clerk directement (pas authWithFallback, qui accorde un
+    // compte factice en bac à sable).
+    let sessionUserId = null;
+    try { sessionUserId = (await auth())?.userId || null; } catch { /* non connecté */ }
+    if (!sessionUserId) {
+      return NextResponse.json({ error: 'Non autorisé - Utilisateur non connecté' }, { status: 401 });
+    }
+    if (sessionUserId !== clerkId) {
+      return NextResponse.json({ error: 'Accès non autorisé (compte différent)' }, { status: 403 });
     }
 
     await dbConnect();
