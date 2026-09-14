@@ -11,6 +11,8 @@ import { fetchUserWithRefs, studentFullName } from './components/family/familyAp
 import Link from 'next/link';
 import PermissionGate from './components/PermissionGate';
 import AppointmentsPanel from './components/appointments/AppointmentsPanel';
+import ParentDashboard from './components/family/ParentDashboard';
+import StudentSpace from './components/family/StudentSpace';
 
 function classLabel(classes, classId) {
   if (!classId || !Array.isArray(classes)) return '';
@@ -90,73 +92,11 @@ export default function Page() {
         {/* Left/Main Column */}
         <div className="ecole-dashboard-column">
           
-          {/* Rôle PARENT: Liste des enfants */}
-          {userRole === 'parent' && (
-            <div className="familyHome familyHome--parent">
-              <section className="ecole-card-dashboard">
-                <h2 className="ecole-card-dashboard__title">🧒 Mes enfants</h2>
-                {loadingRefs ? (
-                  <p>Chargement des dossiers enfants...</p>
-                ) : children.length === 0 ? (
-                  <p style={{ color: '#64748b', fontStyle: 'italic' }}>
-                    Aucun enfant rattaché à votre compte. Contactez l'administration pour lier vos comptes par email.
-                  </p>
-                ) : (
-                  <div className="ecole-parent-kids">
-                    {children.map((child) => {
-                      const cls = classLabel(classes, child.current_classe);
-                      return (
-                        <article key={child._id} className="ecole-kid-card">
-                          <div className="ecole-kid-card__top">
-                            <span className="ecole-kid-card__avatar">🧒</span>
-                            <div>
-                              <h3 className="ecole-kid-card__name">{studentFullName(child)}</h3>
-                              {cls && <span className="ecole-kid-card__class">{cls}</span>}
-                            </div>
-                          </div>
-                          <div className="ecole-kid-card__links">
-                            <Link href={`/eleves/${child._id}`} className="ecole-kid-card__link-chip">📋 Profil & devoirs</Link>
-                            <Link href={`/eleves/${child._id}`} className="ecole-kid-card__link-chip">💬 Messagerie</Link>
-                            <Link href={`/eleves/${child._id}`} className="ecole-kid-card__link-chip">💶 Scolarité</Link>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            </div>
-          )}
+          {/* Rôle PARENT: Dashboard Famille complet */}
+          {userRole === 'parent' && <ParentDashboard />}
 
-          {/* Rôle PARENT: Rendez-vous */}
-          {userRole === 'parent' && (
-            <section className="ecole-card-dashboard">
-              <h2 className="ecole-card-dashboard__title">📅 Mes rendez-vous</h2>
-              <AppointmentsPanel initiatorRole="parent" canCreate={false} />
-            </section>
-          )}
-
-          {/* Rôle ÉLÈVE: Liens rapides */}
-          {userRole === 'eleve' && (
-            <div className="familyHome familyHome--student">
-              <section className="ecole-card-dashboard">
-                <h2 className="ecole-card-dashboard__title">🚀 Mon Espace Élève</h2>
-              {loadingRefs ? (
-                <p>Chargement...</p>
-              ) : !profileHref ? (
-                <p style={{ color: '#64748b', fontStyle: 'italic' }}>
-                  Votre profil élève n'est pas encore rattaché à ce compte autonome.
-                </p>
-              ) : (
-                <div className="ecole-student-links">
-                  <Link href={profileHref} className="ecole-student-link ecole-student-link--primary">📋 Mon Profil & Devoirs</Link>
-                  <Link href={profileHref} className="ecole-student-link">💬 Messages Enseignant</Link>
-                  <Link href="/games" className="ecole-student-link">🎮 Jeux pédagogiques</Link>
-                </div>
-              )}
-            </section>
-          </div>
-        )}
+          {/* Rôle ÉLÈVE: Espace Élève complet */}
+          {userRole === 'eleve' && <StudentSpace />}
 
           {/* Rôle ADMIN & ENSEIGNANT: Widget Tâches / Rapport Journalier */}
           {(userRole === 'admin' || userRole === 'enseignant') && (

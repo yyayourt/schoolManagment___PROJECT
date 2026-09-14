@@ -17,6 +17,7 @@ export default function AdministrationPage() {
         eleves, fetchEleves,
         enseignants, fetchEnseignants,
         classes, fetchClasses,
+        fetchBootstrap,
         setSelected, setShowModal, setEditType
     } = useContext(AiAdminContext);
 
@@ -70,7 +71,7 @@ export default function AdministrationPage() {
             }
             const data = await res.json();
             alert(`✅ Succès : ${data.message}`);
-            fetchClasses(); // Recharger les classes
+            fetchClasses(true); // Recharger les classes en outrepassant le cache
         } catch (error) {
             console.error('Erreur migration:', error);
             alert(`❌ Erreur : ${error.message}`);
@@ -91,9 +92,20 @@ export default function AdministrationPage() {
             }
             const data = await res.json();
             alert(`✅ Succès : ${data.message}`);
-            fetchEleves();
-            fetchEnseignants();
-            fetchClasses();
+            
+            // Nettoyer le LocalStorage et forcer le rechargement depuis l'API
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('classes');
+                localStorage.removeItem('eleves');
+                localStorage.removeItem('enseignants');
+            }
+            if (fetchBootstrap) {
+                await fetchBootstrap(true);
+            } else {
+                fetchEleves(true);
+                fetchEnseignants(true);
+                fetchClasses(true);
+            }
         } catch (error) {
             console.error('Erreur reset demo:', error);
             alert(`❌ Erreur : ${error.message}`);

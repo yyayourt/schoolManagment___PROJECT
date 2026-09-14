@@ -22,7 +22,7 @@ export async function GET(request) {
     
     const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
 
     const settings = await SchoolSettings.findOne({ schoolKey });
 
@@ -96,7 +96,7 @@ export async function PUT(request) {
 
     const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
 
     const updated = await SchoolSettings.findOneAndUpdate(
       { schoolKey },

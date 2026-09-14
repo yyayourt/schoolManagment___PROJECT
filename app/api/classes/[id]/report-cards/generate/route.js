@@ -2,13 +2,15 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { authWithFallback } from '../../../../lib/authWithFallback'
 import dbConnect from '../../../../lib/dbConnect'
-import { computeClassReport, mention } from '../../../../../../utils/bulletins'
+import { computeClassReport, computeClassReportFromNotes, mention, periodToIndices } from '../../../../../../utils/bulletins'
 
 const mongoose = require('mongoose')
 const Eleve = require('../../../../_/models/ai/Eleve')
+const Classe = require('../../../../_/models/ai/Classe')
 const Subject = require('../../../../_/models/ai/Subject')
 const ReportCard = require('../../../../_/models/ai/ReportCard')
 const User = require('../../../../_/models/ai/User')
+const Note = require('../../../../_/models/ai/Note')
 
 const PERIODS = ['TRIMESTRE_1', 'TRIMESTRE_2', 'TRIMESTRE_3', 'ANNUEL']
 
@@ -62,8 +64,27 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: 'Aucun élève dans cette classe' }, { status: 404 })
     }
 
-    // Calcul autoritaire côté serveur
-    const report = computeClassReport(eleves, schoolYear, period)
+    // Récupérer la classe pour lire ses coefficients (configurés par le PP / Admin)
+    const classe = await Classe.findById(classId).lean()
+    const classCoefficients = classe?.coefficients || {}
+
+    // Recherche des notes du trimestre pour la classe
+    const trimestres = periodToIndices(period).map(i => i + 1) // [0] -> [1] (Trimestre 1)
+    const notes = await Note.find({ 
+      schoolKey, 
+      classeId: classId, 
+      annee: schoolYear, 
+      trimestre: { $in: trimestres } 
+    }).lean()
+
+    // Calcul autoritaire côté serveur (Priorité au nouveau système de notes)
+    let report;
+    if (notes && notes.length > 0) {
+      report = computeClassReportFromNotes(eleves, notes, classCoefficients)
+    } else {
+      // Solution de repli (Rétrocompatibilité Primaire ou si aucune nouvelle note n'a été saisie)
+      report = computeClassReport(eleves, schoolYear, period)
+    }
 
     // Résolution des noms de matières (les clés peuvent être des ObjectId)
     const subjects = await Subject.find({ schoolKey }).select('nom').lean()

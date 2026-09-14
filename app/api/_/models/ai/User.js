@@ -14,7 +14,7 @@ const userSchema = mongoose.Schema({
     lastName: { type: String, default: "" },
     role: {
         type: String,
-        enum: ['admin', 'prof', 'eleve', 'parent', 'public'],
+        enum: ['admin', 'prof', 'eleve', 'parent', 'public', 'cpe', 'surveillant', 'documentaliste', 'orientation', 'principal'],
         default: 'public',
         required: true
     },
@@ -81,6 +81,23 @@ userSchema.methods.hasPermission = function(permission) {
             'manage_users', 'manage_classes', 'manage_students', 
             'manage_teachers', 'view_reports', 'manage_settings',
             'delete_data', 'export_data'
+        ],
+        principal: [
+            'manage_users', 'manage_classes', 'manage_students', 
+            'manage_teachers', 'view_reports', 'manage_settings',
+            'validate_conseil'
+        ],
+        cpe: [
+            'manage_attendance', 'manage_incidents', 'view_all_students', 'contact_parents'
+        ],
+        surveillant: [
+            'manage_attendance', 'report_incidents', 'view_public_info'
+        ],
+        documentaliste: [
+            'manage_library', 'view_public_info'
+        ],
+        orientation: [
+            'view_all_students', 'manage_orientation'
         ],
         prof: [
             'view_my_classes', 'manage_my_students', 'create_reports',

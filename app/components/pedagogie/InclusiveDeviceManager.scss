@@ -1,0 +1,573 @@
+.inclusive-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  font-family: inherit;
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.2rem;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 12px;
+    padding: 0.85rem 1.2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    select, input[type="text"] {
+      padding: 0.55rem 0.85rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #ffffff;
+      color: #0f172a;
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      }
+    }
+  }
+
+  &__alert {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 500;
+
+    &--success {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    &--error {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+  }
+
+  &__loading, &__empty {
+    padding: 2.5rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  &__section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  }
+
+  &__section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Grid des avatars élèves */
+  &__icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.85rem;
+  }
+}
+
+.inclusive-icon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+
+  &:hover {
+    background: #f1f5f9;
+    transform: translateY(-2px);
+  }
+
+  &--selected {
+    background: #eff6ff;
+    border-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  }
+
+  &__avatar {
+    position: relative;
+    width: 48px;
+    height: 48px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  &__count-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+  }
+
+  &__name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+  }
+
+  &__badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.2rem;
+    margin-top: 0.2rem;
+  }
+
+  &__none {
+    font-size: 0.68rem;
+    color: #94a3b8;
+  }
+}
+
+.inclusive-mini-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+}
+
+/* Card Élève Actif */
+.inclusive-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1.15rem;
+      color: #0f172a;
+    }
+  }
+
+  &__subtitle {
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  &__avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__quick-add {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  &__add-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__no-device {
+    padding: 1.8rem;
+    text-align: center;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    color: #64748b;
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  &__grid-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0.85rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    input, textarea {
+      padding: 0.55rem 0.8rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      color: #0f172a;
+      background: #ffffff;
+
+      &:focus {
+        outline: none;
+        border-color: #2563eb;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+  }
+
+  &__save-btn {
+    padding: 0.75rem 1.4rem;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+  }
+}
+
+.inclusive-add-btn {
+  padding: 0.4rem 0.65rem;
+  background: #ffffff;
+  border: 1px solid var(--btn-color, #2563eb);
+  color: var(--btn-color, #2563eb);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--btn-color, #2563eb);
+    color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+/* Bannière d'alerte enseignants */
+.inclusive-banner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+
+  &__title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1e40af;
+    margin-bottom: 0.4rem;
+  }
+
+  &__list {
+    margin: 0;
+    padding-left: 1.2rem;
+    font-size: 0.82rem;
+    color: #1e3a8a;
+
+    li {
+      margin-bottom: 0.2rem;
+    }
+  }
+}
+
+/* Bloc Dispositif */
+.inclusive-device-block {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #2563eb;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    strong {
+      font-size: 0.95rem;
+      color: #0f172a;
+    }
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__sub {
+    font-size: 0.78rem;
+    color: #64748b;
+  }
+
+  &__header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  &__status-select {
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #ffffff;
+  }
+
+  &__remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    opacity: 0.6;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+/* Grille de cases à cocher aménagements */
+.inclusive-suggestions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+
+.inclusive-checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #334155;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+  }
+
+  input[type="checkbox"] {
+    accent-color: #2563eb;
+    cursor: pointer;
+  }
+}
+
+/* Tableau récapitulatif classe */
+.inclusive-table-wrapper {
+  overflow-x: auto;
+}
+
+.inclusive-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+
+  th, td {
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+  }
+
+  tr:hover {
+    background: #f8fafc;
+  }
+
+  &__tr--active {
+    background: #eff6ff !important;
+  }
+
+  &__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  &__badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #ffffff;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+  }
+
+  &__edit-btn {
+    padding: 0.3rem 0.6rem;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    cursor: pointer;
+
+    &:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+  }
+}
+
+.inclusive-custom-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: #1e293b;
+
+  button {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0 0.1rem;
+    line-height: 1;
+
+    &:hover {
+      color: #b91c1c;
+    }
+  }
+}
+
+.inclusive-add-custom-btn {
+  padding: 0.4rem 0.85rem;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #1d4ed8;
+  }
+}
+

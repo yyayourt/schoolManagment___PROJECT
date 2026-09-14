@@ -4,7 +4,13 @@ import { getLSItem, setLSItem } from '../../utils/localStorageManager';
 import { getDefaultSchoolYear } from '../../utils/schoolYear';
 import Gmap from '../_/Gmap_plus';
 import CameraCapture from './CameraCapture';
-import { Parent, CommentairesBlock, SchoolHistoryBlock, ScolarityFeesBlock, CoefficientsManager, CompositionsBlock, AbsencesBlock, BonusBlock, ManusBlock, AddNoteForm, TargetsProfilingBlock, DocumentsBlock, CompositionsManager, generateSchoolYears } from './entityBlocks';
+import { Parent, CommentairesBlock, SchoolHistoryBlock, ScolarityFeesBlock, CoefficientsManager, CompositionsBlock, AbsencesBlock, BonusBlock, ManusBlock, AddNoteForm, TargetsProfilingBlock, DocumentsBlock, CompositionsManager, CorpsEnseignantManager, DeleguesManager, GroupesManager, generateSchoolYears } from './entityBlocks';
+import ConseilClasseManager from './pedagogie/ConseilClasseManager';
+import SocleCommunManager from './pedagogie/SocleCommunManager';
+import DnbSimulator from './pedagogie/DnbSimulator';
+import OrientationManager from './pedagogie/OrientationManager';
+import Stage3emeManager from './pedagogie/Stage3emeManager';
+import InclusiveDeviceManager from './pedagogie/InclusiveDeviceManager';
 
 // type: 'eleve' | 'enseignant' | 'classe'
 
@@ -179,9 +185,16 @@ export default function EntityModal({ type, entity, onClose, classes = [] }) {
       formData.adresse_$_map = (lat != null && lng != null) ? `${lat},${lng}` : '';
     }
 
-    // S'assurer que les coefficients sont toujours initialisés pour les classes
-    if (type === 'classe' && !formData.coefficients) {
-      formData.coefficients = {};
+    // S'assurer que les coefficients et l'année scolaire sont toujours initialisés pour les classes
+    if (type === 'classe') {
+      if (!formData.coefficients) formData.coefficients = {};
+      if (!formData.annee) {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const schoolYearStart = currentMonth < 7 ? currentYear - 1 : currentYear;
+        formData.annee = `${schoolYearStart}-${schoolYearStart + 1}`;
+      }
     }
 
     return formData;
@@ -808,37 +821,6 @@ export default function EntityModal({ type, entity, onClose, classes = [] }) {
             </div>
           )}
 
-          {/* Contrôles du header pour les classes - Duplication */}
-          {type === 'classe' && entity && (
-            <div className="modal__headerControls">
-              <div className="modal__duplicateControls">
-                <select
-                  className="modal__duplicateDate"
-                  value={duplicateYear}
-                  onChange={(e) => setDuplicateYear(e.target.value)}
-                  disabled={duplicating}
-                  title="Sélectionner une année pour dupliquer la classe"
-                >
-                  <option value="">-- Choisir une année --</option>
-                  {availableYears.map(year => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="modal__duplicateBtn"
-                  onClick={handleDuplicateClass}
-                  disabled={duplicating || !duplicateYear || availableYears.length === 0}
-                  title="Dupliquer la classe pour l'année scolaire sélectionnée"
-                >
-                  {duplicating ? '⏳' : '📋'}
-                </button>
-              </div>
-            </div>
-          )}
-
           <button type="button" className="modal__closeBtn" onClick={onClose} aria-label="Fermer">
             ✕
           </button>
@@ -855,6 +837,36 @@ export default function EntityModal({ type, entity, onClose, classes = [] }) {
           {error && (
             <div className="modal__errorMessage">
               {error}
+            </div>
+          )}
+
+          {/* Contrôles de duplication placés au-dessus de #modalPersonForm */}
+          {type === 'classe' && entity && (
+            <div className="modal__duplicateControlsContainer">
+              <span className="modal__duplicateLabel">📋 Dupliquer la classe :</span>
+              <select
+                className="modal__duplicateSelect"
+                value={duplicateYear}
+                onChange={(e) => setDuplicateYear(e.target.value)}
+                disabled={duplicating}
+                title="Sélectionner une année pour dupliquer la classe"
+              >
+                <option value="">-- Choisir une année scolaire --</option>
+                {availableYears.map(year => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="modal__duplicateActionButton"
+                onClick={handleDuplicateClass}
+                disabled={duplicating || !duplicateYear || availableYears.length === 0}
+                title="Dupliquer la classe pour l'année scolaire sélectionnée"
+              >
+                {duplicating ? '⏳ Duplication...' : 'Dupliquer la classe 📋'}
+              </button>
             </div>
           )}
 
@@ -1102,79 +1114,132 @@ export default function EntityModal({ type, entity, onClose, classes = [] }) {
 
 
             {type === 'classe' && <>
-              <div className="modal__fieldGroup">
-                <label htmlFor="input-annee" className="modal__label">Année scolaire</label>
-                <select
-                  id="input-annee"
-                  name="annee"
-                  value={form.annee || ''}
-                  onChange={handleChange}
-                  className="modal__select"
-                  required
-                >
-                  <option value="">Sélectionnez l'année scolaire</option>
-                  {(() => {
-                    const currentYear = new Date().getFullYear()
-                    const currentMonth = new Date().getMonth() + 1
-                    // Si nous sommes avant juillet, l'année scolaire actuelle a commencé l'année précédente
-                    const schoolYearStart = currentMonth < 7 ? currentYear - 1 : currentYear
-                    const years = []
-                    // Générer 5 années (2 précédentes, actuelle, 2 suivantes)
-                    for (let i = -2; i <= 2; i++) {
-                      const startYear = schoolYearStart + i
-                      const endYear = startYear + 1
-                      years.push(`${startYear}-${endYear}`)
-                    }
-                    return years.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))
-                  })()}
-                </select>
-              </div>
+              {/* 1. INFORMATIONS GÉNÉRALES ET PHOTO DE LA CLASSE REGROUPÉES */}
+              <div className="modal__fieldGroup modal__fieldGroup--section">
+                <h3 className="modal__sectionTitle">🏫 Informations Générales de la Classe</h3>
+                
+                <div className="modal__fieldGroup modal__fieldGroup--grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="modal__fieldGroup">
+                    <label htmlFor="input-annee" className="modal__label">Année scolaire (Fixée)</label>
+                    {(() => {
+                      const now = new Date();
+                      const currentYear = now.getFullYear();
+                      const currentMonth = now.getMonth() + 1;
+                      const schoolYearStart = currentMonth < 7 ? currentYear - 1 : currentYear;
+                      const defaultSchoolYear = `${schoolYearStart}-${schoolYearStart + 1}`;
+                      const currentVal = form.annee || defaultSchoolYear;
 
-              <div className="modal__fieldGroup modal__fieldGroup--grid">
-                <div className="modal__fieldGroup">
-                  <label htmlFor="input-niveau" className="modal__label">Niveau de classe</label>
-                  <select
-                    id="input-niveau"
-                    name="niveau"
-                    value={form.niveau || ''}
-                    onChange={handleChange}
-                    className="modal__select"
-                    required
-                  >
-                    <option value="">Sélectionnez le niveau</option>
-                    {["CP1", "CP2", "CE1", "CE2", "CM1", "CM2"].map(n => <option key={n} value={n}>{n}</option>)}
-                  </select>
+                      return (
+                        <>
+                          <input
+                            id="input-annee"
+                            type="text"
+                            value={currentVal}
+                            readOnly
+                            disabled
+                            className="modal__input modal__input--readonly"
+                          />
+                          <input type="hidden" name="annee" value={currentVal} />
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  <div className="modal__fieldGroup">
+                    <label htmlFor="input-niveau" className="modal__label">Niveau de classe</label>
+                    <select
+                      id="input-niveau"
+                      name="niveau"
+                      value={form.niveau || ''}
+                      onChange={handleChange}
+                      className="modal__select"
+                      required
+                    >
+                      <option value="">Sélectionnez le niveau</option>
+                      {["6ème", "5ème", "4ème", "3ème", "CP1", "CP2", "CE1", "CE2", "CM1", "CM2"].map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
                 </div>
 
-                <TextField id="input-alias" label="Alias de la classe" name="alias" value={form.alias || ''} onChange={handleChange} placeholder="Alias (ex: 4B, A, Rouge...)" />
+                <div className="modal__fieldGroup modal__fieldGroup--grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem' }}>
+                  <TextField id="input-alias" label="Alias de la classe" name="alias" value={form.alias || ''} onChange={handleChange} placeholder="Alias (ex: A, B, Euro...)" />
+
+                  <div className="modal__fieldGroup">
+                    <label htmlFor="input-profPrincipal" className="modal__label">Professeur Principal (Collège/Lycée)</label>
+                    <select
+                      id="input-profPrincipal"
+                      name="profPrincipalId"
+                      value={form.profPrincipalId || ''}
+                      onChange={handleChange}
+                      className="modal__select"
+                    >
+                      <option value="">-- Aucun / Non assigné --</option>
+                      {ctx.enseignants && ctx.enseignants.map(prof => (
+                        <option key={prof._id} value={prof._id}>
+                          {prof.nom} {prof.prenoms ? (Array.isArray(prof.prenoms) ? prof.prenoms.join(' ') : prof.prenoms) : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Photo de la classe déplacée et regroupée avec l'en-tête */}
+                <div style={{ marginTop: '1rem' }}>
+                  <PhotoUploadField field="photo" label="Photo de la classe" alt="Photo de la classe" defaultImg="/school/classe.webp" inputId="input-photo-classe" form={form} fileInput={fileInput} previewUrl={previewUrl} setPreviewUrl={setPreviewUrl} setSelectedFile={setSelectedFile} handleFile={handleFile} setShowCamera={setShowCamera} />
+                </div>
               </div>
 
-              <PhotoUploadField field="photo" label="Photo de la classe" alt="Photo de la classe" defaultImg="/school/classe.webp" inputId="input-photo-classe" form={form} fileInput={fileInput} previewUrl={previewUrl} setPreviewUrl={setPreviewUrl} setSelectedFile={setSelectedFile} handleFile={handleFile} setShowCamera={setShowCamera} />
-
-              {/* Section Coefficients des matières */}
+              {/* 2. BLOC UNIFIÉ : CORPS ENSEIGNANT & COEFFICIENTS DES MATIÈRES FUSIONNÉS */}
               <div className="modal__fieldGroup modal__fieldGroup--coefficients">
-                <h3 className="modal__sectionTitle">Coefficients des matières</h3>
+                <h3 className="modal__sectionTitle">📚 Corps Enseignant & Coefficients des Matières</h3>
                 <p className="modal__sectionDescription">
-                  Configurez les coefficients pour chaque matière de cette classe.
-                  Si non configuré, le coefficient par défaut sera {process.env.NEXT_PUBLIC_SUBJECT_COEFF || '2'}.
+                  Définissez l'enseignant, la salle et le coefficient attribué pour chaque matière de la classe.
                 </p>
-
-                <CoefficientsManager
+                <CorpsEnseignantManager
+                  corpsEnseignant={form.corpsEnseignant || []}
                   coefficients={form.coefficients || {}}
-                  onChange={(newCoefficients) => setForm(f => ({ ...f, coefficients: newCoefficients }))}
-                  subjectGroup={process.env.NEXT_PUBLIC_SUBJECT_GROUP || '[0,1,2,3]'}
+                  onChange={({ corpsEnseignant: newCorps, coefficients: newCoeffs }) => setForm(f => ({
+                    ...f,
+                    corpsEnseignant: newCorps ?? f.corpsEnseignant,
+                    coefficients: newCoeffs ?? f.coefficients
+                  }))}
+                  enseignants={ctx.enseignants || []}
                   dynamicSubjects={dynamicSubjects}
                   subjectsLoaded={subjectsLoaded}
                 />
               </div>
 
-              {/* Section Gestion des compositions */}
-              <div className="modal__fieldGroup modal__fieldGroup--compositions">
-                <h3 className="modal__sectionTitle">Dates de compositions</h3>
+              {/* 3. BLOC UNIFIÉ : ORGANISATION DE LA CLASSE (DÉLÉGUÉS & DEMI-GROUPES) */}
+              <div className="modal__fieldGroup modal__fieldGroup--coefficients">
+                <h3 className="modal__sectionTitle">👥 Organisation Élèves (Délégués & Demi-Groupes)</h3>
                 <p className="modal__sectionDescription">
-                  Définissez les dates de compositions pour cette classe. Ces dates seront disponibles lors de la saisie des notes d'élèves.
+                  Gérez l'élection des délégués ainsi que la création des groupes d'options (LV2, TP, Soutien).
+                </p>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h4 style={{ color: '#1E3A8A', margin: '0 0 0.5rem 0' }}>🎓 Délégués de Classe (Titulaires & Suppléants)</h4>
+                  <DeleguesManager
+                    delegues={form.delegues || []}
+                    onChange={(newDelegues) => setForm(f => ({ ...f, delegues: newDelegues }))}
+                    elevesClasse={ctx.eleves ? ctx.eleves.filter(e => e.current_classe === entity?._id) : []}
+                  />
+                </div>
+
+                <div>
+                  <h4 style={{ color: '#1E3A8A', margin: '1rem 0 0.5rem 0' }}>🧩 Demi-Groupes & Options</h4>
+                  <GroupesManager
+                    groupes={form.groupes || []}
+                    onChange={(newGroupes) => setForm(f => ({ ...f, groupes: newGroupes }))}
+                    elevesClasse={ctx.eleves ? ctx.eleves.filter(e => e.current_classe === entity?._id) : []}
+                  />
+                </div>
+              </div>
+
+              {/* 4. DATES DE COMPOSITIONS */}
+              <div className="modal__fieldGroup modal__fieldGroup--compositions">
+                <h3 className="modal__sectionTitle">📅 Dates de compositions</h3>
+                <p className="modal__sectionDescription">
+                  Définissez les dates de compositions pour cette classe.
                 </p>
 
                 <CompositionsManager
@@ -1183,10 +1248,75 @@ export default function EntityModal({ type, entity, onClose, classes = [] }) {
                 />
               </div>
 
+              {/* 5. CONSEIL DE CLASSE */}
+              <div className="modal__fieldGroup modal__fieldGroup--conseil">
+                <h3 className="modal__sectionTitle">🏛️ Conseil de Classe & Synthèse Trimestrielle</h3>
+                <p className="modal__sectionDescription">
+                  Saisissez les mentions officielles, appréciations du conseil et générez les bulletins officiels pour cette classe.
+                </p>
+
+                <ConseilClasseManager classIdProp={entity?._id} schoolYearProp={form.annee || '2023-2024'} />
+              </div>
+
+              {/* 6. SOCLE COMMUN DE COMPÉTENCES (COLLEGE) */}
+              <div className="modal__fieldGroup modal__fieldGroup--socle">
+                <h3 className="modal__sectionTitle">🎯 Évaluation du Socle Commun de Compétences (Cycle 4)</h3>
+                <p className="modal__sectionDescription">
+                  Évaluez la maîtrise des 8 domaines de compétences du socle officiel pour les élèves de la classe.
+                </p>
+
+                <SocleCommunManager classIdProp={entity?._id} schoolYearProp={form.annee || '2023-2024'} />
+              </div>
+
+              {/* 7. SIMULATEUR BREVET DNB (3ème) */}
+              {form.niveau === '3ème' && (
+                <div className="modal__fieldGroup modal__fieldGroup--dnb">
+                  <h3 className="modal__sectionTitle">🎓 Simulateur & Prédictions Brevet (DNB — 800 pts)</h3>
+                  <p className="modal__sectionDescription">
+                    Estimez la réussite au brevet et prédisez les mentions (socle + épreuves finales).
+                  </p>
+
+                  <DnbSimulator classIdProp={entity?._id} schoolYearProp={form.annee || '2023-2024'} />
+                </div>
+              )}
+
+              {/* 8. ORIENTATION POST-3ÈME */}
+              {form.niveau === '3ème' && (
+                <div className="modal__fieldGroup modal__fieldGroup--orientation">
+                  <h3 className="modal__sectionTitle">🧭 Suivi des Vœux & Parcours d'Orientation Post-3ème</h3>
+                  <p className="modal__sectionDescription">
+                    Saisissez les vœux des familles (2nde GT, 2nde Pro, CAP, CFA), les avis du conseil et les décisions du Principal.
+                  </p>
+
+                  <OrientationManager classIdProp={entity?._id} schoolYearProp={form.annee || '2023-2024'} />
+                </div>
+              )}
+
+              {/* 9. STAGES D'OBSERVATION 3ÈME */}
+              {form.niveau === '3ème' && (
+                <div className="modal__fieldGroup modal__fieldGroup--stage">
+                  <h3 className="modal__sectionTitle">💼 Gestion des Stages d'Observation & Évaluation</h3>
+                  <p className="modal__sectionDescription">
+                    Suivez les conventions en entreprise, la visite de l'enseignant référent et saisissez les notes du stage (/20).
+                  </p>
+
+                  <Stage3emeManager classIdProp={entity?._id} schoolYearProp={form.annee || '2023-2024'} />
+                </div>
+              )}
+
+              {/* 10. DISPOSITIFS INCLUSIFS (PAP, PPRE, PAI, PPS) */}
+              <div className="modal__fieldGroup modal__fieldGroup--inclusive">
+                <h3 className="modal__sectionTitle">🎯 Dispositifs Inclusifs & Accompagnement (PAP, PPRE, PAI, PPS)</h3>
+                <p className="modal__sectionDescription">
+                  Déclarez et gérez les aménagements scolaires pour les élèves à besoins éducatifs particuliers (troubles DYS, PAI santé, remédiation PPRE, accompagnement AESH/MDPH).
+                </p>
+
+                <InclusiveDeviceManager classIdProp={entity?._id} schoolYearProp={form.annee || '2023-2024'} />
+              </div>
+
               <div className="form-info-note">
                 <p><strong>ℹ️ Information :</strong> Les professeurs et élèves seront assignés à cette classe lors de leur création/modification individuelle.</p>
               </div>
-
             </>}
 
           </form>

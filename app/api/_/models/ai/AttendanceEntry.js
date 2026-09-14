@@ -24,6 +24,14 @@ const attendanceEntrySchema = mongoose.Schema({
   },
   // Motif optionnel saisi par le prof (ex: "A raté le bus")
   comment: { type: String, default: '', required: false, trim: true },
+  // Justificatif parental et validation Vie Scolaire / CPE
+  justification: {
+    note: { type: String, default: '' },
+    submittedAt: { type: Date },
+    status: { type: String, enum: ['NONE', 'PENDING', 'ACCEPTED', 'REJECTED'], default: 'NONE' },
+    validatedBy: { type: String, default: '' },
+    validatedAt: { type: Date }
+  },
   // Dénormalisés depuis la session (pour les stats élève)
   classId: { type: ObjectId, ref: 'ai_Ecole_St_Martin', required: false, default: null },
   date: { type: Date, required: false, default: null },

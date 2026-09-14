@@ -1,0 +1,261 @@
+il y a un truc aussu que je comrpend pas, pourquoi y a-t'il autant de logs dans le terminal !??? c'est complètement dingue, et les logs semblent ne jamais s'arreter !
+Donc cela témoigne d'un traffic incessant. Quelle est l'origine de de ces logs d'authentification parasites ???
+
+Voici tous les logs pour afficher la page /classes:
+   ▲ Next.js 15.3.9 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.6:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 2.9s
+ ✓ Ready in 4.7s
+ ○ Compiling /classes ...
+ ✓ Compiled /classes in 14.2s
+ GET /classes 200 in 15357ms
+ ○ Compiling /_not-found/page ...
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 14116ms
+✅ Modèle Subject créé avec le nouveau schéma Mixed pour niveaux
+🔐 Authentification API:
+  - authStatus: signed-in
+  - authToken présent: true
+(node:50371) [MONGOOSE] Warning: Duplicate schema index on {"code":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ Compiled /_not-found/page in 19.6s
+🔐 Authentification GET /api/school_ai/enseignants:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 Authentification GET /api/school_ai/ecole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 Authentification GET /api/school_ai/eleves:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 Authentification GET /api/school_ai/classes:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+[MONGODB_CONN] Connecting to Production Database...
+[MONGODB_CONN] Connecting to Sandbox Database...
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Connected to MongoDB Sandbox (Pool)
+✅ Connected to MongoDB Production (Default)
+[BACKEND ENSEIGNANTS] GET /api/school_ai/enseignants - UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, schoolKey: demo_master
+[BACKEND ELEVES] GET /api/school_ai/eleves - UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, isAdmin: true, isTeacher: false
+[BACKEND ELEVES] MONGODB_URI: cluster0.ocqa5pg.mongodb.net/middleschoolERP?retryWrites=true&w=majority&appName=Cluster0, schoolKey: demo_master
+[BACKEND ENSEIGNANTS] 📊 Enseignants trouvés (schoolKey: demo_master): 0
+ GET /api/school_ai/enseignants 200 in 17605ms
+🔐 Authentification GET /api/school_ai/enseignants:
+  - authStatus: signed-in
+  - authToken présent: true
+[BACKEND ELEVES] 📊 Élèves trouvés pour Admin (schoolKey: demo_master): 0
+ GET /api/school_ai/eleves 200 in 17836ms
+ GET /api/school_ai/ecole 200 in 17893ms
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+[BACKEND ENSEIGNANTS] GET /api/school_ai/enseignants - UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, schoolKey: demo_master
+🔐 Authentification GET /api/school_ai/eleves:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 Authentification GET /api/school_ai/ecole:
+  - authStatus: signed-in
+  - authToken présent: true
+[BACKEND ENSEIGNANTS] 📊 Enseignants trouvés (schoolKey: demo_master): 0
+ GET /api/school_ai/enseignants 200 in 506ms
+ GET /api/subjects 200 in 16942ms
+[DEBUG CLASSES] Requête reçue. UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, isAdmin: true, isTeacher: false
+[DEBUG CLASSES] schoolKey: demo_master
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 Authentification GET /api/school_ai/enseignants:
+  - authStatus: signed-in
+  - authToken présent: true
+[DEBUG CLASSES] Classes trouvées pour Admin: 0
+ GET /api/school_ai/classes 200 in 18781ms
+🔐 Authentification GET /api/school_ai/classes:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+[BACKEND ENSEIGNANTS] GET /api/school_ai/enseignants - UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, schoolKey: demo_master
+[BACKEND ENSEIGNANTS] 📊 Enseignants trouvés (schoolKey: demo_master): 0
+ GET /api/school_ai/enseignants 200 in 598ms
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+[BACKEND ELEVES] GET /api/school_ai/eleves - UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, isAdmin: true, isTeacher: false
+[BACKEND ELEVES] MONGODB_URI: cluster0.ocqa5pg.mongodb.net/middleschoolERP?retryWrites=true&w=majority&appName=Cluster0, schoolKey: demo_master
+ GET /api/school_ai/ecole 200 in 1825ms
+[BACKEND ELEVES] 📊 Élèves trouvés pour Admin (schoolKey: demo_master): 0
+ GET /api/school_ai/eleves 200 in 1896ms
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification GET /api/school_ai/ecole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 Authentification GET /api/school_ai/eleves:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+[DEBUG CLASSES] Requête reçue. UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, isAdmin: true, isTeacher: false
+[DEBUG CLASSES] schoolKey: demo_master
+[DEBUG CLASSES] Classes trouvées pour Admin: 0
+ GET /api/school_ai/classes 200 in 1903ms
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification GET /api/school_ai/classes:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+[BACKEND ELEVES] GET /api/school_ai/eleves - UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, isAdmin: true, isTeacher: false
+[BACKEND ELEVES] MONGODB_URI: cluster0.ocqa5pg.mongodb.net/middleschoolERP?retryWrites=true&w=majority&appName=Cluster0, schoolKey: demo_master
+ GET /api/school_ai/ecole 200 in 2021ms
+[BACKEND ELEVES] 📊 Élèves trouvés pour Admin (schoolKey: demo_master): 0
+ GET /api/school_ai/eleves 200 in 2030ms
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification GET /api/school_ai/ecole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 Authentification GET /api/school_ai/eleves:
+  - authStatus: signed-in
+  - authToken présent: true
+[DEBUG CLASSES] Requête reçue. UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, isAdmin: true, isTeacher: false
+[DEBUG CLASSES] schoolKey: demo_master
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+[DEBUG CLASSES] Classes trouvées pour Admin: 0
+ GET /api/school_ai/classes 200 in 1965ms
+🔐 Authentification GET /api/school_ai/classes:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+[BACKEND ELEVES] GET /api/school_ai/eleves - UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, isAdmin: true, isTeacher: false
+[BACKEND ELEVES] MONGODB_URI: cluster0.ocqa5pg.mongodb.net/middleschoolERP?retryWrites=true&w=majority&appName=Cluster0, schoolKey: demo_master
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+ GET /api/school_ai/ecole 200 in 2025ms
+[BACKEND ELEVES] 📊 Élèves trouvés pour Admin (schoolKey: demo_master): 0
+ GET /api/school_ai/eleves 200 in 1999ms
+[DEBUG CLASSES] Requête reçue. UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, isAdmin: true, isTeacher: false
+[DEBUG CLASSES] schoolKey: demo_master
+[DEBUG CLASSES] Classes trouvées pour Admin: 0
+ GET /api/school_ai/classes 200 in 1951ms
+🔐 Authentification GET /api/school_ai/classes:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+🔐 [checkRole] Email admin reconnu (hi.cyril@gmail.com) -> Autorisé Admin
+🔐 Authentification checkRole:
+  - authStatus: signed-in
+  - authToken présent: true
+✅ Utilisateur authentifié: user_2QqOlFih8HtmqtLzYB8jBwmNgXj
+[DEBUG CLASSES] Requête reçue. UserID: user_2QqOlFih8HtmqtLzYB8jBwmNgXj, isAdmin: true, isTeacher: false
+[DEBUG CLASSES] schoolKey: demo_master
+[DEBUG CLASSES] Classes trouvées pour Admin: 0
+ GET /api/school_ai/classes 200 in 2074ms

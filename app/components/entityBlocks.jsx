@@ -1943,4 +1943,333 @@ function CompositionsManager({ compositions = [], onChange }) {
   );
 }
 
-export { SchoolHistoryBlock, ScolarityFeesBlock, TargetsProfilingBlock, AddNoteForm, CompositionsBlock, CommentairesBlock, Parent, AbsencesBlock, BonusBlock, ManusBlock, DocumentsBlock, CompositionsManager, CoefficientsManager, generateSchoolYears, migrateCompositionsFormat };
+// --- Bloc de gestion du Corps Enseignant et Coefficients (Collège/Lycée) ---
+function CorpsEnseignantManager({ corpsEnseignant = [], coefficients = {}, onChange, enseignants = [], dynamicSubjects = [], subjectsLoaded }) {
+  const [selectedMatiere, setSelectedMatiere] = useState('');
+  const [selectedProf, setSelectedProf] = useState('');
+  const [salle, setSalle] = useState('');
+  const [coeffDenominateur, setCoeffDenominateur] = useState('20');
+
+  // Initialisation par défaut
+  useEffect(() => {
+    if (subjectsLoaded && dynamicSubjects.length > 0 && !selectedMatiere) {
+      setSelectedMatiere(dynamicSubjects[0].id);
+    }
+    if (enseignants.length > 0 && !selectedProf) {
+      setSelectedProf(enseignants[0]._id);
+    }
+  }, [dynamicSubjects, subjectsLoaded, enseignants, selectedMatiere, selectedProf]);
+
+  const handleAdd = () => {
+    if (!selectedMatiere || !selectedProf) return;
+    
+    const newCorps = corpsEnseignant.filter(c => c.matiereId !== selectedMatiere);
+    newCorps.push({
+      matiereId: selectedMatiere,
+      enseignantId: selectedProf,
+      sallePrincipale: salle
+    });
+
+    const newCoefficients = { ...coefficients };
+    const coeffVal = Math.max(1, Math.floor(parseInt(coeffDenominateur) / 10));
+    newCoefficients[selectedMatiere] = coeffVal;
+
+    onChange({ corpsEnseignant: newCorps, coefficients: newCoefficients });
+    setSalle('');
+  };
+
+  const handleRemove = (matiereId) => {
+    const newCorps = corpsEnseignant.filter(c => c.matiereId !== matiereId);
+    const newCoefficients = { ...coefficients };
+    delete newCoefficients[matiereId];
+    onChange({ corpsEnseignant: newCorps, coefficients: newCoefficients });
+  };
+
+  if (!subjectsLoaded) return <div className="coefficients-manager__loading">Chargement des matières...</div>;
+
+  return (
+    <div className="corps-enseignant-manager">
+      {/* Formulaire d'ajout en 1 ligne fluide */}
+      <div className="corps-enseignant-manager__form">
+        <select 
+          value={selectedMatiere} 
+          onChange={e => setSelectedMatiere(e.target.value)}
+          className="corps-enseignant-manager__select"
+        >
+          <option value="" disabled>-- Matière --</option>
+          {dynamicSubjects.map(m => (
+            <option key={m.id} value={m.id}>{m.nom}</option>
+          ))}
+        </select>
+        
+        <select 
+          value={selectedProf} 
+          onChange={e => setSelectedProf(e.target.value)}
+          className="corps-enseignant-manager__select"
+        >
+          <option value="" disabled>-- Enseignant --</option>
+          {enseignants.map(p => (
+            <option key={p._id} value={p._id}>
+              {p.nom} {Array.isArray(p.prenoms) ? p.prenoms.join(' ') : p.prenoms}
+            </option>
+          ))}
+        </select>
+
+        <input 
+          type="text" 
+          value={salle} 
+          onChange={e => setSalle(e.target.value)}
+          placeholder="Salle (ex: 102)"
+          className="corps-enseignant-manager__input"
+        />
+
+        <select
+          value={coeffDenominateur}
+          onChange={e => setCoeffDenominateur(e.target.value)}
+          className="corps-enseignant-manager__select"
+        >
+          <option value="10">Coeff 1 (/10)</option>
+          <option value="20">Coeff 2 (/20)</option>
+          <option value="30">Coeff 3 (/30)</option>
+          <option value="40">Coeff 4 (/40)</option>
+          <option value="50">Coeff 5 (/50)</option>
+        </select>
+
+        <button 
+          type="button" 
+          onClick={handleAdd} 
+          className="corps-enseignant-manager__add-btn"
+        >
+          + Assigner
+        </button>
+      </div>
+
+      {/* Tableau des matières configurées */}
+      <div className="corps-enseignant-manager__table-wrapper">
+        {corpsEnseignant.length > 0 ? (
+          <table className="corps-enseignant-manager__table">
+            <thead>
+              <tr>
+                <th>Matière</th>
+                <th>Enseignant & Salle</th>
+                <th>Coefficient</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {corpsEnseignant.map((assignment, idx) => {
+                const matiere = dynamicSubjects.find(m => m.id === assignment.matiereId);
+                const prof = enseignants.find(p => p._id === assignment.enseignantId);
+                if (!matiere || !prof) return null;
+                const coeff = coefficients[assignment.matiereId] || 2;
+
+                return (
+                  <tr key={idx}>
+                    <td className="corps-enseignant-manager__subject-name">
+                      {matiere.nom}
+                    </td>
+                    <td>
+                      <span className="corps-enseignant-manager__prof-badge">
+                        👨‍🏫 {prof.nom} {Array.isArray(prof.prenoms) ? prof.prenoms.join(' ') : prof.prenoms}
+                        {assignment.sallePrincipale && <span className="corps-enseignant-manager__salle-badge">📍 {assignment.sallePrincipale}</span>}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="corps-enseignant-manager__coeff-badge">
+                        📊 Coeff {coeff} <span>(sur {coeff * 10})</span>
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemove(assignment.matiereId)} 
+                        className="corps-enseignant-manager__remove-btn"
+                        title="Supprimer cette matière"
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <p className="corps-enseignant-manager__empty">
+            Aucun professeur ni coefficient attribué pour le moment.
+          </p>
+        )}
+      </div>
+
+      <div className="corps-enseignant-manager__info">
+        <p><strong>💡 Note :</strong> L'enseignant assigné et le coefficient de la matière sont enregistrés simultanément. Le coefficient (1 à 5) définit l'impact de la matière sur le calcul des moyennes trimestrielles du collège.</p>
+      </div>
+    </div>
+  );
+}
+
+// --- Bloc de gestion du Délégué Unique ---
+function DeleguesManager({ delegues = [], onChange, elevesClasse = [] }) {
+  const currentDelegueId = Array.isArray(delegues) ? delegues[0] || '' : (delegues || '');
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    onChange(val ? [val] : []);
+  };
+
+  if (!elevesClasse || elevesClasse.length === 0) {
+    return <p className="corps-enseignant-manager__empty">Veuillez d'abord assigner des élèves à cette classe via leur fiche élève.</p>;
+  }
+
+  const selectedEleve = elevesClasse.find(e => e._id === currentDelegueId);
+
+  return (
+    <div className="delegues-manager">
+      <div className="delegues-manager__form">
+        <label className="delegues-manager__label">
+          Délégué de classe :
+        </label>
+        <select 
+          value={currentDelegueId} 
+          onChange={handleChange}
+          className="delegues-manager__select"
+        >
+          <option value="">-- Aucun délégué désigné --</option>
+          {elevesClasse.map(e => (
+            <option key={e._id} value={e._id}>
+              {e.nom} {Array.isArray(e.prenoms) ? e.prenoms.join(' ') : e.prenoms}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {selectedEleve && (
+        <div className="delegues-manager__badge">
+          <span>
+            🎓 Délégué élu : {selectedEleve.nom} {Array.isArray(selectedEleve.prenoms) ? selectedEleve.prenoms.join(' ') : selectedEleve.prenoms}
+          </span>
+          <button 
+            type="button" 
+            onClick={() => onChange([])} 
+            className="delegues-manager__remove-btn" 
+            title="Retirer ce délégué"
+          >
+            ×
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Bloc de gestion des Demi-groupes / Options ---
+function GroupesManager({ groupes = [], onChange, elevesClasse = [] }) {
+  const [newGroupName, setNewGroupName] = useState('');
+  const [selectedGroupIndex, setSelectedGroupIndex] = useState(null);
+  const [selectedEleve, setSelectedEleve] = useState('');
+
+  const handleCreateGroup = () => {
+    if (!newGroupName.trim()) return;
+    onChange([...groupes, { nom: newGroupName.trim(), eleves: [] }]);
+    setNewGroupName('');
+  };
+
+  const handleRemoveGroup = (idx) => {
+    const newGroupes = [...groupes];
+    newGroupes.splice(idx, 1);
+    onChange(newGroupes);
+    if (selectedGroupIndex === idx) setSelectedGroupIndex(null);
+  };
+
+  const handleAddEleveToGroup = () => {
+    if (selectedGroupIndex === null || !selectedEleve) return;
+    const newGroupes = [...groupes];
+    if (!newGroupes[selectedGroupIndex].eleves.includes(selectedEleve)) {
+      newGroupes[selectedGroupIndex].eleves.push(selectedEleve);
+      onChange(newGroupes);
+    }
+    setSelectedEleve('');
+  };
+
+  const handleRemoveEleveFromGroup = (groupIndex, eleveId) => {
+    const newGroupes = [...groupes];
+    newGroupes[groupIndex].eleves = newGroupes[groupIndex].eleves.filter(id => id !== eleveId);
+    onChange(newGroupes);
+  };
+
+  return (
+    <div className="coefficients-manager">
+      <div className="compositions-block__add-form coefficients-manager__add-form" style={{ flexWrap: 'wrap', gap: '10px', marginBottom: '1rem' }}>
+        <input 
+          type="text" 
+          value={newGroupName} 
+          onChange={e => setNewGroupName(e.target.value)}
+          placeholder="Nom du groupe (ex: Groupe A, LV2 Allemand)"
+          className="modal__input"
+          style={{ flexGrow: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+        />
+        <button type="button" onClick={handleCreateGroup} className="compositions-block__add-btn">
+          Créer un groupe
+        </button>
+      </div>
+
+      {groupes.length > 0 ? (
+        <div className="coefficients-manager__configured">
+          {groupes.map((grp, idx) => (
+            <div key={idx} style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, color: '#1E3A8A' }}>{grp.nom} ({grp.eleves.length} élèves)</h4>
+                <button type="button" onClick={() => handleRemoveGroup(idx)} className="modal__actions-btn modal__actions-btn--danger" style={{ padding: '4px 8px', fontSize: '0.8rem' }}>
+                  Supprimer ce groupe
+                </button>
+              </div>
+
+              {elevesClasse && elevesClasse.length > 0 ? (
+                <div className="compositions-block__add-form" style={{ display: 'flex', gap: '10px', marginBottom: '1rem' }}>
+                  <select 
+                    value={selectedGroupIndex === idx ? selectedEleve : ''} 
+                    onChange={e => {
+                      setSelectedGroupIndex(idx);
+                      setSelectedEleve(e.target.value);
+                    }}
+                    className="compositions-block__matiere-select"
+                    style={{ flexGrow: 1 }}
+                  >
+                    <option value="" disabled>-- Ajouter un élève au groupe --</option>
+                    {elevesClasse.map(e => (
+                      <option key={e._id} value={e._id} disabled={grp.eleves.includes(e._id)}>
+                        {e.nom} {Array.isArray(e.prenoms) ? e.prenoms.join(' ') : e.prenoms} {grp.eleves.includes(e._id) ? '(Déjà dans le groupe)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={handleAddEleveToGroup} className="compositions-block__add-btn" disabled={selectedGroupIndex !== idx || !selectedEleve}>
+                    Ajouter
+                  </button>
+                </div>
+              ) : (
+                 <p className="coefficients-manager__empty" style={{ marginBottom: '1rem' }}>Veuillez d'abord assigner des élèves à la classe.</p>
+              )}
+
+              <div className="coefficients-manager__list">
+                {grp.eleves.map((eleveId) => {
+                  const eleve = elevesClasse.find(e => e._id === eleveId);
+                  if (!eleve) return null;
+                  return (
+                    <div key={eleveId} className="coefficients-manager__configured-item" style={{ padding: '0.2rem 0.5rem', background: '#f8f9fa' }}>
+                      <span>{eleve.nom} {Array.isArray(eleve.prenoms) ? eleve.prenoms.join(' ') : eleve.prenoms}</span>
+                      <button type="button" onClick={() => handleRemoveEleveFromGroup(idx, eleveId)} className="coefficients-manager__remove-btn" title="Retirer l'élève du groupe">×</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="coefficients-manager__empty">Aucun demi-groupe ou groupe d'option n'a été créé.</p>
+      )}
+    </div>
+  );
+}
+
+export { SchoolHistoryBlock, ScolarityFeesBlock, TargetsProfilingBlock, AddNoteForm, CompositionsBlock, CommentairesBlock, Parent, AbsencesBlock, BonusBlock, ManusBlock, DocumentsBlock, CompositionsManager, CoefficientsManager, CorpsEnseignantManager, DeleguesManager, GroupesManager, generateSchoolYears, migrateCompositionsFormat };

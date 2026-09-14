@@ -7,9 +7,10 @@ export const generateGroupsAndMessages = async (Group, GroupMessage, schoolKey, 
     const yearStart = new Date(currentYearStr.split('-')[0] + "-09-01T08:00:00Z").getTime();
     
     // Création de 2 groupes
+    const prefix = schoolKey.substring(0, 4).toUpperCase();
     const groups = [
-        { name: "Association Sportive (AS)", desc: "Pour tous les membres des équipes sportives de l'école.", code: `AS-${currentYearNum}` },
-        { name: "Club Théâtre", desc: "Organisation des pièces de théâtre et répétitions.", code: `THEATRE-${currentYearNum}` }
+        { name: "Association Sportive (AS)", desc: "Pour tous les membres des équipes sportives de l'école.", code: `AS-${currentYearNum}-${prefix}` },
+        { name: "Club Théâtre", desc: "Organisation des pièces de théâtre et répétitions.", code: `THEATRE-${currentYearNum}-${prefix}` }
     ];
 
     const teacherId = teachers.length > 0 ? `user_teacher_${teachers[0]._id.toString()}` : adminId;

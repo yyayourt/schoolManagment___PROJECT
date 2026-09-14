@@ -523,6 +523,12 @@ export default ({ children }) => {
                             Enseignants
                           </Link>
                           <Link
+                            href="/saisie-notes"
+                            className="ecole-dropdown__item"
+                          >
+                            <i className="fas fa-edit"></i> Saisie des Notes
+                          </Link>
+                          <Link
                             href="/enseignants/mon-planning"
                             className="ecole-dropdown__item"
                           >
@@ -530,39 +536,30 @@ export default ({ children }) => {
                           </Link>
                         </PermissionGate>
                         <PermissionGate role="eleve">
-                          <a
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              alert(
-                                "En mode Sandbox, accédez à votre profil via les notifications.",
-                              );
-                            }}
-                            className="ecole-dropdown__item"
-                          >
+                          <Link href="/eleves" className="ecole-dropdown__item">
                             <i className="fas fa-id-card"></i> Mon Dossier
-                          </a>
-                          <Link href="#" className="ecole-dropdown__item">
-                            <i className="fas fa-book"></i> Mon Cahier de Texte
                           </Link>
                         </PermissionGate>
                         <PermissionGate role="parent">
-                          <a
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              alert(
-                                "En mode Sandbox, le dashboard parent est simulé.",
-                              );
-                            }}
-                            className="ecole-dropdown__item"
-                          >
-                            <i className="fas fa-users"></i> Suivi de mes
-                            Enfants
-                          </a>
-                          <Link href="#" className="ecole-dropdown__item">
-                            <i className="fas fa-credit-card"></i> Paiements &
-                            Frais
+                          <Link href="/eleves" className="ecole-dropdown__item">
+                            <i className="fas fa-users"></i> Suivi de mes Enfants
+                          </Link>
+                        </PermissionGate>
+                        <PermissionGate roles={["parent", "eleve"]}>
+                          <Link href="/orientation" className="ecole-dropdown__item">
+                            <i className="fas fa-compass"></i> Orientation (3ème)
+                          </Link>
+                          <Link href="/stages-3eme" className="ecole-dropdown__item">
+                            <i className="fas fa-briefcase"></i> Stages (3ème)
+                          </Link>
+                          <Link href="/brevet-dnb" className="ecole-dropdown__item">
+                            <i className="fas fa-award"></i> Simulateur Brevet
+                          </Link>
+                          <Link href="/dispositifs-inclusifs" className="ecole-dropdown__item">
+                            <i className="fas fa-hands-helping"></i> Dispositifs Inclusifs
+                          </Link>
+                          <Link href="/socle-commun" className="ecole-dropdown__item">
+                            <i className="fas fa-tasks"></i> Socle Commun
                           </Link>
                         </PermissionGate>
                       </div>
@@ -657,16 +654,16 @@ export default ({ children }) => {
           </PermissionGate>
 
           <PermissionGate role="eleve">
-            <Link href="#" className="ecole-mobile-bottom-nav__item">
-              <i className="fas fa-book"></i>
-              <span>Devoirs</span>
+            <Link href="/eleves" className="ecole-mobile-bottom-nav__item">
+              <i className="fas fa-id-card"></i>
+              <span>Mon Espace</span>
             </Link>
           </PermissionGate>
 
           <PermissionGate role="parent">
-            <Link href="#" className="ecole-mobile-bottom-nav__item">
-              <i className="fas fa-credit-card"></i>
-              <span>Frais</span>
+            <Link href="/eleves" className="ecole-mobile-bottom-nav__item">
+              <i className="fas fa-users"></i>
+              <span>Mes Enfants</span>
             </Link>
           </PermissionGate>
 
@@ -794,6 +791,64 @@ export default ({ children }) => {
                       <i className="fas fa-calendar-alt"></i>
                     </div>
                     <span>Planning</span>
+                  </Link>
+                </div>
+              </div>
+            </PermissionGate>
+
+            <PermissionGate roles={["parent", "eleve"]}>
+              <div className="ecole-app-grid__section">
+                <h4>Pédagogie</h4>
+                <div className="ecole-app-grid__items">
+                  <Link
+                    href="/orientation"
+                    className="ecole-app-grid__item"
+                    onClick={() => setIsDrawerOpen(false)}
+                  >
+                    <div className="ecole-app-grid__icon ecole-app-grid__icon--indigo">
+                      <i className="fas fa-compass"></i>
+                    </div>
+                    <span>Orientation</span>
+                  </Link>
+                  <Link
+                    href="/stages-3eme"
+                    className="ecole-app-grid__item"
+                    onClick={() => setIsDrawerOpen(false)}
+                  >
+                    <div className="ecole-app-grid__icon ecole-app-grid__icon--teal">
+                      <i className="fas fa-briefcase"></i>
+                    </div>
+                    <span>Stages</span>
+                  </Link>
+                  <Link
+                    href="/brevet-dnb"
+                    className="ecole-app-grid__item"
+                    onClick={() => setIsDrawerOpen(false)}
+                  >
+                    <div className="ecole-app-grid__icon ecole-app-grid__icon--blue">
+                      <i className="fas fa-award"></i>
+                    </div>
+                    <span>Brevet</span>
+                  </Link>
+                  <Link
+                    href="/dispositifs-inclusifs"
+                    className="ecole-app-grid__item"
+                    onClick={() => setIsDrawerOpen(false)}
+                  >
+                    <div className="ecole-app-grid__icon ecole-app-grid__icon--cyan">
+                      <i className="fas fa-hands-helping"></i>
+                    </div>
+                    <span>Inclusif</span>
+                  </Link>
+                  <Link
+                    href="/socle-commun"
+                    className="ecole-app-grid__item"
+                    onClick={() => setIsDrawerOpen(false)}
+                  >
+                    <div className="ecole-app-grid__icon ecole-app-grid__icon--orange">
+                      <i className="fas fa-tasks"></i>
+                    </div>
+                    <span>Socle</span>
                   </Link>
                 </div>
               </div>

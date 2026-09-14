@@ -24,6 +24,11 @@ const institutionSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },
+  type: { 
+    type: String, 
+    enum: ['PRIMAIRE', 'COLLEGE', 'LYCEE', 'MIXTE'], 
+    default: 'PRIMAIRE' 
+  },
   createdAt: { 
     type: Date, 
     default: Date.now 

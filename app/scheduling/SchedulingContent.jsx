@@ -9,6 +9,7 @@ import ScheduleManager from '../components/ScheduleManager'
 import ScheduleHistory from '../components/ScheduleHistory'
 import ScheduleEditor from '../components/ScheduleEditor'
 import SubjectsPalette from '../components/SubjectsPalette'
+import RoomScheduleViewer from '../components/RoomScheduleViewer'
 
 export default function SchedulingContent() {
   const searchParams = useSearchParams()
@@ -176,6 +177,13 @@ export default function SchedulingContent() {
               <span className="scheduling__nav-btn-icon">🎨</span>
               Matières
             </button>
+            <button
+              className={`scheduling__nav-btn ${currentView === 'rooms' ? 'scheduling__nav-btn--active' : ''}`}
+              onClick={() => handleViewChange('rooms')}
+            >
+              <span className="scheduling__nav-btn-icon">🏛️</span>
+              Occupation par Salle
+            </button>
             <a
               href="/calendar"
               target="_blank"
@@ -191,6 +199,9 @@ export default function SchedulingContent() {
         </header>
 
         <div className="scheduling__content">
+          {currentView === 'rooms' && (
+            <RoomScheduleViewer />
+          )}
           {currentView === 'manager' && (
             <>
               <ScheduleManager

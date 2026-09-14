@@ -14,9 +14,11 @@ export async function GET(request) {
     await dbConnect();
     const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
 
+    console.log(`[BACKEND ENSEIGNANTS] GET /api/school_ai/enseignants - UserID: ${authResult.userId}, schoolKey: ${schoolKey}`);
     const enseignants = await Teacher.find({ schoolKey });
+    console.log(`[BACKEND ENSEIGNANTS] 📊 Enseignants trouvés (schoolKey: ${schoolKey}): ${enseignants.length}`);
     return NextResponse.json(enseignants);
   } catch (error) {
     return NextResponse.json({ error: 'Erreur lors de la récupération des enseignants' }, { status: 500 });

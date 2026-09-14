@@ -85,12 +85,27 @@ export default function ClassesPage({ children }) {
       )}
     </div>
 
-    <div className="ecole-admin__nav-actions">
+    <div className="ecole-admin__nav-actions" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
       <Link href="/scheduling" className="ecole-admin__nav-link-item">
-        <span className="icon">📅</span> Accéder au Planning (Schedules)
+        <span className="icon">📅</span> Planning (EDT)
       </Link>
-      <Link href="/calendar" className="ecole-admin__nav-link-item" style={{ marginLeft: '1rem' }}>
-        <span className="icon">📆</span> Agenda de l'école
+      <Link href="/calendar" className="ecole-admin__nav-link-item">
+        <span className="icon">📆</span> Agenda école
+      </Link>
+      <Link href="/socle-commun" className="ecole-admin__nav-link-item">
+        <span className="icon">🎯</span> Socle Commun
+      </Link>
+      <Link href="/brevet-dnb" className="ecole-admin__nav-link-item">
+        <span className="icon">🎓</span> Brevet DNB
+      </Link>
+      <Link href="/orientation" className="ecole-admin__nav-link-item">
+        <span className="icon">🧭</span> Orientation 3ème
+      </Link>
+      <Link href="/stages-3eme" className="ecole-admin__nav-link-item">
+        <span className="icon">💼</span> Stages 3ème
+      </Link>
+      <Link href="/dispositifs-inclusifs" className="ecole-admin__nav-link-item">
+        <span className="icon">🤝</span> Dispositifs Inclusifs
       </Link>
     </div>
 

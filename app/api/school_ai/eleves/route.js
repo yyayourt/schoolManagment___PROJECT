@@ -2,47 +2,44 @@
 import dbConnect from '../../lib/dbConnect';
 import Eleve from '../../_/models/ai/Eleve';
 import { NextResponse } from 'next/server';
-import { checkRole, Roles } from '../../../../utils/roles';
+import { checkRole, getAuthAndRole, Roles } from '../../../../utils/roles';
 import { authWithFallback } from '../../lib/authWithFallback';
 import User from '../../_/models/ai/User';
 
 export async function GET(request) {
   try {
-    const authResult = await authWithFallback(request, 'GET /api/school_ai/eleves');
-    if (!authResult.success) {
-      return authResult.response;
-    }
-    const userId = authResult.userId;
-
-    const isAdmin = await checkRole(Roles.ADMIN, request);
-    const isTeacher = await checkRole(Roles.TEACHER, request);
-
-    if (!isAdmin && !isTeacher) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    const { success, userId, isAdmin, isTeacher } = await getAuthAndRole(request);
+    if (!success) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 401 });
     }
 
     await dbConnect();
 
     const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
-    const schoolKey = cookieStore.get('x-school-key')?.value || 'ecole_st_martin';
+    const schoolKey = cookieStore.get('x-school-key')?.value || 'demo_master';
+
+    console.log(`[BACKEND ELEVES] MONGODB_URI: ${process.env.MONGODB_URI?.split('@')[1] || 'N/A'}, schoolKey: ${schoolKey}`);
 
     if (isAdmin) {
       const eleves = await Eleve.find({ schoolKey });
+      console.log(`[BACKEND ELEVES] 📊 Élèves trouvés pour Admin (schoolKey: ${schoolKey}): ${eleves.length}`);
       return NextResponse.json(eleves);
     }
 
-    // Teacher flow: filter students by assigned classes
-    const user = await User.findOne({ clerkId: userId }).populate('roleData.teacherRef');
-    if (!user || user.role !== 'prof' || !user.roleData?.teacherRef) {
-      return NextResponse.json({ error: 'Profil enseignant non trouvé' }, { status: 404 });
+    if (isTeacher) {
+      // Teacher flow: filter students by assigned classes
+      const user = await User.findOne({ clerkId: userId }).populate('roleData.teacherRef');
+      if (user && user.role === 'prof' && user.roleData?.teacherRef) {
+        const teacherClasses = user.roleData.teacherRef.current_classes;
+        const eleves = await Eleve.find({ schoolKey, current_classe: { $in: teacherClasses } })
+          .select('-scolarity_fees_$_checkbox');
+        return NextResponse.json(eleves);
+      }
     }
 
-    const teacherClasses = user.roleData.teacherRef.current_classes;
-
-    const eleves = await Eleve.find({ schoolKey, current_classe: { $in: teacherClasses } })
-      .select('-scolarity_fees_$_checkbox');
-
+    // Family (Parent / Élève) & Sandbox flow: return school students
+    const eleves = await Eleve.find({ schoolKey }).select('-scolarity_fees_$_checkbox');
     return NextResponse.json(eleves);
   } catch (error) {
     return NextResponse.json({ error: 'Erreur lors de la récupération des élèves', details: error.message }, { status: 500 });

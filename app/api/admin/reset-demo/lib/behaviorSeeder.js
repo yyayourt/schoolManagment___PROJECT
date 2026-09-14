@@ -1,5 +1,7 @@
 import PointLabel from '../../../_/models/ai/PointLabel';
 import PointTransaction from '../../../_/models/ai/PointTransaction';
+import Incident from '../../../_/models/ai/Incident';
+import CarnetEntry from '../../../_/models/ai/CarnetEntry';
 
 const defaultLabels = [
     { name: '[Démo] Bonne participation', type: 'BONUS', defaultAmount: 1, color: '#2ecc71', icon: '✋' },
@@ -24,7 +26,6 @@ export const seedPointLabels = async (schoolKey) => {
 };
 
 export const generateBehaviorAndAdminForClassYear = async (classe, elevesPopulated, yearStr, schoolKey, teacherId, labels, getRandomDate) => {
-    // Nombre de transactions de comportement à générer par élève pour l'année
     for (const eleve of elevesPopulated) {
         
         // 1. Frais de scolarité (Administration)
@@ -51,10 +52,8 @@ export const generateBehaviorAndAdminForClassYear = async (classe, elevesPopulat
         // 3. Transactions de points (Bonus/Malus)
         const numTransactions = Math.floor(Math.random() * 5); // 0 à 4 événements par an
         for (let i = 0; i < numTransactions; i++) {
-            // Choix aléatoire d'un label
             const label = labels[Math.floor(Math.random() * labels.length)];
             
-            // Commentaire optionnel (20% du temps)
             let comment = '';
             if (Math.random() > 0.8) {
                 if (label.type === 'MALUS') comment = "Plusieurs avertissements donnés.";
@@ -73,18 +72,74 @@ export const generateBehaviorAndAdminForClassYear = async (classe, elevesPopulat
             });
             await transaction.save();
             
-            // Mise à jour de la fiche élève pour le frontend
             if (label.type === 'BONUS') {
                 if (!eleve.bonus) eleve.bonus = [];
                 eleve.bonus.push({
                     [transaction.createdAt.getTime()]: `[Démo] ${label.name}`
                 });
             } else {
-                if (!eleve.manus) eleve.manus = []; // Note: manus = malus dans le schéma Eleve
+                if (!eleve.manus) eleve.manus = [];
                 eleve.manus.push({
                     [transaction.createdAt.getTime()]: `[Démo] ${label.name}`
                 });
             }
+        }
+
+        // 4. Génération d'incidents de Vie Scolaire (Collège)
+        if (Math.random() > 0.6) {
+            const incidentDate = getRandomDate(yearStr);
+            const gravites = ['FAIBLE', 'MOYENNE', 'GRAVE'];
+            const gravite = gravites[Math.floor(Math.random() * gravites.length)];
+            
+            let sanctionType = 'AUCUNE';
+            let details = '';
+            if (gravite === 'MOYENNE') {
+                sanctionType = 'HEURE_DE_COLLE';
+                details = '1h de retenue le mercredi après-midi';
+            } else if (gravite === 'GRAVE') {
+                sanctionType = 'AVERTISSEMENT';
+                details = 'Avertissement de conduite notifié par la CPE';
+            }
+
+            const incident = new Incident({
+                schoolKey,
+                eleveId: eleve._id,
+                rapporteurId: teacherId,
+                classeId: classe._id,
+                dateIncident: incidentDate,
+                description: `[Démo] Incident de discipline en classe de ${classe.niveau}`,
+                gravite,
+                sanction: {
+                    type: sanctionType,
+                    details,
+                    travailAFaire: sanctionType !== 'AUCUNE' ? 'Exercices de révision à rendre en colle' : '',
+                    dateSanction: new Date(incidentDate.getTime() + 86400000 * 2),
+                    estSigneParParent: Math.random() > 0.3
+                }
+            });
+            await incident.save();
+        }
+
+        // 5. Génération du carnet de correspondance numérique
+        if (Math.random() > 0.5) {
+            const carnetDate = getRandomDate(yearStr);
+            const types = ['OBSERVATION', 'INFORMATION', 'CONVOCATION', 'AUTORISATION'];
+            const typeChoice = types[Math.floor(Math.random() * types.length)];
+
+            const carnet = new CarnetEntry({
+                schoolKey,
+                eleveId: eleve._id,
+                auteurId: teacherId,
+                auteurRole: 'PROF',
+                type: typeChoice,
+                titre: `[Démo] ${typeChoice} - Année ${yearStr}`,
+                contenu: `Billet d'information à destination des responsables de l'élève pour le suivi en ${classe.niveau}.`,
+                luParParent: true,
+                dateLecture: carnetDate,
+                signatureParent: Math.random() > 0.3,
+                dateSignature: carnetDate
+            });
+            await carnet.save();
         }
     }
 };

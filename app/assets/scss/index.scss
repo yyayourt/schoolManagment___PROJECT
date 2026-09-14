@@ -915,7 +915,9 @@ section>div:has(.modal) {
 
   textarea {
     @extend %entityModal__textarea;
-    display: none;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   label {

@@ -35,6 +35,8 @@ const eventSchema = mongoose.Schema({
   type: { type: String, enum: ['COURSE', 'BREAK', 'CUSTOM_EVENT'], default: 'COURSE' },
   subjectId: { type: ObjectId, ref: 'Subject', required: false, default: null }, // requis si type COURSE
   teacherId: { type: String, required: false, default: null }, // assignation directe éventuelle
+  salleId: { type: ObjectId, ref: 'ai_Salles_Ecole_St_Martin', required: false, default: null },
+  salleNom: { type: String, required: false, default: '' },
   label: { type: String, maxlength: 120 }, // libellé libre (pause, événement)
   notes: { type: String, maxlength: 200 },
 }, { _id: false })

@@ -165,3 +165,107 @@ export function mention(general) {
   if (general >= 10) return 'Assez bien';
   return 'Doit travailler davantage';
 }
+
+// NOUVEAU MOTEUR (Collège) - Calcul basé sur le modèle Note.js
+export function computeClassReportFromNotes(eleves, notes, classCoefficients = {}) {
+  // 1. Regrouper les notes par élève puis par matière
+  const elevesNotes = {};
+  eleves.forEach(e => {
+    elevesNotes[e._id] = {};
+  });
+
+  notes.forEach(n => {
+    const eId = String(n.eleveId);
+    const mId = String(n.matiereId);
+    if (!elevesNotes[eId]) elevesNotes[eId] = {};
+    if (!elevesNotes[eId][mId]) elevesNotes[eId][mId] = [];
+    elevesNotes[eId][mId].push(n);
+  });
+
+  const defaultCoeffMatiere = parseInt(process.env.NEXT_PUBLIC_SUBJECT_COEFF || '2');
+
+  // 2. Calculer les moyennes par élève
+  const perStudent = eleves.map(eleve => {
+    const eId = String(eleve._id);
+    const studentSubjects = elevesNotes[eId] || {};
+    
+    const subjects = [];
+    let sumGen = 0;
+    let totCoeffGen = 0;
+
+    Object.entries(studentSubjects).forEach(([matiereId, matiereNotes]) => {
+      let sumNotes = 0;
+      let totPoids = 0;
+
+      matiereNotes.forEach(noteObj => {
+        const valSur20 = (noteObj.note / (noteObj.sur || 20)) * 20;
+        const poids = noteObj.poids || (noteObj.typeDevoir === 'DS' ? 2 : noteObj.typeDevoir === 'EX' ? 3 : 1);
+        
+        sumNotes += valSur20 * poids;
+        totPoids += poids;
+      });
+
+      if (totPoids > 0) {
+        const average = sumNotes / totPoids;
+        // Obtenir le coefficient de la matière pour la classe
+        const coeffMatiere = classCoefficients[matiereId] !== undefined ? classCoefficients[matiereId] : defaultCoeffMatiere;
+        
+        subjects.push({
+          key: matiereId,
+          name: null, // Sera résolu plus tard
+          average: average,
+          coef: coeffMatiere,
+          count: matiereNotes.length
+        });
+
+        sumGen += average * coeffMatiere;
+        totCoeffGen += coeffMatiere;
+      }
+    });
+
+    const general = totCoeffGen > 0 ? sumGen / totCoeffGen : null;
+
+    return {
+      studentId: eId,
+      subjects,
+      general,
+      source: 'NoteModel'
+    };
+  });
+
+  // 3. Calculer les statistiques de la classe
+  const subjStats = {}; 
+  perStudent.forEach(ps => {
+    ps.subjects.forEach(s => {
+      if (!subjStats[s.key]) {
+        subjStats[s.key] = { sum: 0, count: 0, min: Infinity, max: -Infinity };
+      }
+      const st = subjStats[s.key];
+      st.sum += s.average;
+      st.count += 1;
+      st.min = Math.min(st.min, s.average);
+      st.max = Math.max(st.max, s.average);
+    });
+  });
+
+  const classSubjects = {};
+  Object.entries(subjStats).forEach(([k, st]) => {
+    classSubjects[k] = {
+      average: st.count ? st.sum / st.count : null,
+      min: st.min === Infinity ? null : st.min,
+      max: st.max === -Infinity ? null : st.max,
+      count: st.count,
+    };
+  });
+
+  const withGen = perStudent.filter((p) => p.general !== null);
+  const classGeneral = withGen.length
+    ? withGen.reduce((a, p) => a + p.general, 0) / withGen.length
+    : null;
+
+  const ranked = [...withGen].sort((a, b) => b.general - a.general);
+  const rank = {};
+  ranked.forEach((p, i) => { rank[p.studentId] = i + 1; });
+
+  return { perStudent, classSubjects, classGeneral, classSize: ranked.length, rank };
+}

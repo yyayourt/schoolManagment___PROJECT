@@ -1,0 +1,418 @@
+.socle-manager {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+  }
+
+  &__field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    label {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #334155;
+    }
+
+    select, input {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: #ffffff;
+    }
+  }
+
+  &__alert {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+
+    &--success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    &--error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+  }
+
+  &__loading, &__empty {
+    text-align: center;
+    padding: 3rem;
+    color: #64748b;
+    font-style: italic;
+  }
+
+  &__section {
+    margin-bottom: 2rem;
+  }
+
+  &__section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  &__icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.85rem;
+    background: #f8fafc;
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+  }
+}
+
+/* Boutons d'icône d'élève */
+.socle-icon-btn {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+  }
+
+  &__avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    background: #f1f5f9;
+    border: 2px solid #cbd5e1;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    font-size: 0.85rem;
+  }
+
+  &__name {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+  }
+
+  &__score {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #2563eb;
+    background: #eff6ff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+  }
+
+  &--selected {
+    border-color: #2563eb !important;
+    background: #eff6ff !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25) !important;
+  }
+
+  &--complete {
+    border-color: #8b5cf6;
+  }
+}
+
+/* Carte d'Édition du Socle */
+.socle-card-editor {
+  background: #f8fafc;
+  border: 2px solid #3b82f6;
+  border-radius: 14px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: #ffffff;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1.15rem;
+      color: #0f172a;
+    }
+  }
+
+  &__subtitle {
+    font-size: 0.825rem;
+    color: #64748b;
+  }
+
+  &__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #3b82f6;
+  }
+
+  &__score-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2rem;
+  }
+
+  &__score-val {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #1e293b;
+
+    span {
+      font-size: 0.85rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+  }
+
+  &__score-progress {
+    width: 140px;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  &__score-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    transition: width 0.3s ease;
+  }
+
+  &__count {
+    font-size: 0.725rem;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  &__appr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    label {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #1e293b;
+    }
+
+    textarea {
+      display: block !important;
+      visibility: visible !important;
+      padding: 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #ffffff;
+
+      &:focus {
+        outline: none;
+        border-color: #2563eb;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__save-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+/* Domaines de compétences */
+.socle-domains-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.socle-domain-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__info {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+
+    p {
+      margin: 0.2rem 0 0 0;
+      font-size: 0.825rem;
+      color: #64748b;
+    }
+  }
+
+  &__icon {
+    font-size: 1.5rem;
+  }
+
+  &__code {
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 800;
+  }
+
+  &__pills {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem;
+  }
+}
+
+/* Pastilles de choix du niveau de maîtrise */
+.socle-pill {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #334155;
+
+  &:hover {
+    border-color: var(--pill-color);
+    background: #ffffff;
+  }
+
+  &__pts {
+    font-weight: 800;
+    font-size: 0.725rem;
+    opacity: 0.85;
+  }
+
+  &--active {
+    background: #ffffff !important;
+    border-color: var(--pill-color) !important;
+    box-shadow: 0 0 0 2px var(--pill-color) !important;
+    color: #0f172a !important;
+    font-weight: 700;
+  }
+}
+
+/* Tableau récapitulatif */
+.socle-summary-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.socle-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+
+  th, td {
+    padding: 0.65rem 0.5rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  th {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+  }
+
+  &__tr--active {
+    background: #eff6ff;
+  }
+
+  &__edit-btn {
+    background: none;
+    border: 1px solid #cbd5e1;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+  }
+}

@@ -15,13 +15,11 @@ const subjectSchema = new mongoose.Schema({
   nom: { 
     type: String, 
     required: true, 
-    unique: true,
     trim: true
   },
   code: { 
     type: String, 
     required: true, 
-    unique: true,
     uppercase: true,
     maxlength: 6
   },
@@ -63,8 +61,9 @@ const subjectSchema = new mongoose.Schema({
 })
 
 // Index pour optimiser les requêtes
+subjectSchema.index({ schoolKey: 1, code: 1 })
+subjectSchema.index({ schoolKey: 1, nom: 1 })
 subjectSchema.index({ niveaux: 1, isActive: 1 })
-subjectSchema.index({ code: 1 })
 
 // Créer le modèle avec un nom unique pour éviter les conflits de cache
 let Subject

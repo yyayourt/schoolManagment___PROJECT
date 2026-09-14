@@ -43,30 +43,23 @@ export async function authWithFallback(request, context = 'API') {
     const authStatus = request.headers.get('x-clerk-auth-status')
     const authToken = request.headers.get('x-clerk-auth-token')
     
-    console.log(`🔐 Authentification ${context}:`)
-    console.log('  - authStatus:', authStatus)
-    console.log('  - authToken présent:', !!authToken)
-    
     let userId = null
     
     // ÉTAPE 1: Essayer d'abord la méthode standard auth()
-    // auth() est asynchrone dans l'App Router : sans await, userId était toujours undefined
     try {
       const authResult = await auth()
       userId = authResult.userId
     } catch (authError) {
-      console.error('  - Erreur auth():', authError.message)
+      // Silence auth error fallback
     }
     
     // ÉTAPE 2: Si auth() échoue, essayer de décoder le token manuellement
     if (!userId && authToken) {
       try {
-        // Décoder le JWT pour extraire le sub (userId)
         const tokenPayload = JSON.parse(atob(authToken.split('.')[1]))
         userId = tokenPayload.sub
-        console.log('  - userId (token décodé):', userId)
       } catch (tokenError) {
-        console.log('  - Erreur décodage token:', tokenError.message)
+        // Silence token error
       }
     }
     
@@ -95,10 +88,8 @@ export async function authWithFallback(request, context = 'API') {
     }
 
     if (forceFalsy || !userId || authStatus !== 'signed-in') {
-      // DÉTECTION DU MODE FALSY (non authentifié ou forcé côté client/serveur)
       if (forceFalsy || !userId) {
         if (process.env.NEXT_PUBLIC_MODE === 'test' && !forceFalsy) {
-          console.log('❌ Utilisateur non authentifié (Mode test actif, pas de fallback falsy)');
           return {
             success: false,
             userId: null,
@@ -109,17 +100,12 @@ export async function authWithFallback(request, context = 'API') {
           };
         }
 
-        console.log('⚠️ Passage en MODE FALSY (Forcé ou non-authentifié)');
         return {
           success: true,
-          userId: 'user_fake_admin_123', // Correspond à l'admin créé dans la base Sample
+          userId: 'user_fake_admin_123',
           response: null
         }
       }
-
-      console.log('❌ Utilisateur non authentifié')
-      console.log('  - userId final:', userId)
-      console.log('  - authStatus:', authStatus)
       
       return {
         success: false,
@@ -130,8 +116,6 @@ export async function authWithFallback(request, context = 'API') {
         )
       }
     }
-    
-    console.log('✅ Utilisateur authentifié:', userId)
     
     return {
       success: true,

@@ -20,6 +20,12 @@ import PointLabel from '../../_/models/ai/PointLabel';
 import Subject from '../../_/models/ai/Subject';
 import Event from '../../_/models/ai/Event';
 import Article from '../../_/models/ai/Article';
+import Note from '../../_/models/ai/Note';
+import Incident from '../../_/models/ai/Incident';
+import CarnetEntry from '../../_/models/ai/CarnetEntry';
+import Stage3eme from '../../_/models/ai/Stage3eme';
+import InclusiveDevice from '../../_/models/ai/InclusiveDevice';
+import Orientation3eme from '../../_/models/ai/Orientation3eme';
 
 import { seedSubjects, generateStudentNotes, generateReportCardsForYear, getCoefficientsForNiveau, convertNotesToCompositions } from './lib/academicSeeder';
 import { generateAttendanceForClassYear } from './lib/attendanceSeeder';
@@ -30,6 +36,9 @@ import { generateFinancialsForClassYear } from './lib/financialSeeder';
 import { generateEvents } from './lib/eventSeeder';
 import { generateBlogAndPosts } from './lib/blogSeeder';
 import { generateGroupsAndMessages } from './lib/groupSeeder';
+import { generateStagesForClassYear } from './lib/stageSeeder';
+import { generateInclusiveDevicesForClassYear } from './lib/inclusiveDeviceSeeder';
+import { generateOrientationForClassYear } from './lib/orientationSeeder';
 
 const getRandomDateInYear = (yearStr) => {
   const startYear = parseInt(yearStr.split('-')[0]);
@@ -45,17 +54,25 @@ export async function POST(request) {
 
     await dbConnect();
 
-    const schoolKey = 'demo_master';
+    const schoolKeys = ['ecole_st_martin', 'demo_master'];
 
     // 1. PURGE
-    const models = [Institution, SchoolSettings, Classe, Eleve, Teacher, Post, Group, GroupMessage, Schedule, ReportCard, AttendanceRecord, AttendanceEntry, PointTransaction, PointLabel, Subject, Event, Article];
-    for (const model of models) {
-      if (model) await model.deleteMany({ schoolKey });
+    try {
+      await Subject.collection.dropIndexes();
+      await Subject.syncIndexes();
+    } catch (e) {
+      // Ignorer si les index n'existaient pas
     }
 
-    // 2. INSTITUTION & SETTINGS
-    const inst = new Institution({ schoolKey, name: "École Primaire d'Excellence", isReal: false, ownerClerkId: userId });
-    await inst.save();
+    const models = [Institution, SchoolSettings, Classe, Eleve, Teacher, Post, Group, GroupMessage, Schedule, ReportCard, AttendanceRecord, AttendanceEntry, PointTransaction, PointLabel, Subject, Event, Article, Note, Incident, CarnetEntry, Stage3eme, InclusiveDevice, Orientation3eme];
+    for (const model of models) {
+      if (model) await model.deleteMany({ schoolKey: { $in: schoolKeys } });
+    }
+
+    for (const schoolKey of schoolKeys) {
+      // 2. INSTITUTION & SETTINGS
+      const inst = new Institution({ schoolKey, name: "Collège d'Excellence", type: 'COLLEGE', isReal: false, ownerClerkId: userId });
+      await inst.save();
 
     const settings = new SchoolSettings({
       schoolKey,
@@ -76,7 +93,7 @@ export async function POST(request) {
         { key: 'doRegime', options: ['Demi-pensionnaire', 'Externe'] },
         { key: 'doTransport', options: ['Zone A', 'Zone B', 'Pas de transport'] }
       ],
-      homepage: { title: `🏫 Démo Complète - ESMP`, texts: ["Explorez cette démo avec 6 ans d'historique (Notes, Appels, Paiements...)."], photo: '/school/classe.webp' }
+      homepage: { title: `🏫 Démo Complète - Collège`, texts: ["Explorez cette démo avec 4 ans d'historique du Collège."], photo: '/school/classe.webp' }
     });
     await settings.save();
 
@@ -85,26 +102,18 @@ export async function POST(request) {
     const pointLabels = await seedPointLabels(schoolKey);
 
     const timeline = [
-      { year: '2020-2021', niveau: 'CP1', alias: 'A' },
-      { year: '2021-2022', niveau: 'CP2', alias: 'A' },
-      { year: '2022-2023', niveau: 'CE1', alias: 'A' },
-      { year: '2023-2024', niveau: 'CE2', alias: 'A' },
-      { year: '2024-2025', niveau: 'CM1', alias: 'A' },
-      { year: '2025-2026', niveau: 'CM2', alias: 'A' },
+      { year: '2022-2023', niveau: '6ème', alias: 'A' },
+      { year: '2023-2024', niveau: '5ème', alias: 'A' },
+      { year: '2024-2025', niveau: '4ème', alias: 'A' },
+      { year: '2025-2026', niveau: '3ème', alias: 'A' }
     ];
 
-    const teacher1 = new Teacher({
-      schoolKey, nom: 'Martin', prenoms: ['Jean'], sexe: 'M', naissance_$_date: new Date('1980-01-01').getTime(),
-      adresse_$_map: 'Paris', phone_$_tel: '+33600000001', email_$_email: 'jean.martin@ecole.fr', photo_$_file: '/school/prof.webp',
-      current_classes: []
-    });
-    const teacher2 = new Teacher({
-      schoolKey, nom: 'Dubois', prenoms: ['Marie'], sexe: 'F', naissance_$_date: new Date('1985-01-01').getTime(),
-      adresse_$_map: 'Lyon', phone_$_tel: '+33600000002', email_$_email: 'marie.dubois@ecole.fr', photo_$_file: '/school/prof.webp',
-      current_classes: []
-    });
-    await teacher1.save();
-    await teacher2.save();
+    const teacher1 = new Teacher({ schoolKey, nom: 'Martin', prenoms: ['Jean'], sexe: 'M', email_$_email: 'jean.martin@ecole.fr', photo_$_file: '/school/prof.webp', current_classes: [], adresse_$_map: 'Paris', phone_$_tel: '+33600000001', naissance_$_date: new Date('1980-01-01').getTime() });
+    const teacher2 = new Teacher({ schoolKey, nom: 'Dubois', prenoms: ['Marie'], sexe: 'F', email_$_email: 'marie.dubois@ecole.fr', photo_$_file: '/school/prof.webp', current_classes: [], adresse_$_map: 'Lyon', phone_$_tel: '+33600000002', naissance_$_date: new Date('1985-01-01').getTime() });
+    const teacher3 = new Teacher({ schoolKey, nom: 'Lefebvre', prenoms: ['Luc'], sexe: 'M', email_$_email: 'luc.lefebvre@ecole.fr', photo_$_file: '/school/prof.webp', current_classes: [], adresse_$_map: 'Marseille', phone_$_tel: '+33600000003', naissance_$_date: new Date('1990-01-01').getTime() });
+    const teacher4 = new Teacher({ schoolKey, nom: 'Garcia', prenoms: ['Sophie'], sexe: 'F', email_$_email: 'sophie.garcia@ecole.fr', photo_$_file: '/school/prof.webp', current_classes: [], adresse_$_map: 'Toulouse', phone_$_tel: '+33600000004', naissance_$_date: new Date('1988-01-01').getTime() });
+    await teacher1.save(); await teacher2.save(); await teacher3.save(); await teacher4.save();
+    const teachersList = [teacher1, teacher2, teacher3, teacher4];
 
     const noms = ['Lefebvre', 'Bernard', 'Durand', 'Petit', 'Leroy', 'Moreau', 'Simon', 'Laurent', 'Michel', 'Garcia', 'David', 'Roux', 'Vincent', 'Garnier'];
     const prenomsGars = ['Lucas', 'Hugo', 'Arthur', 'Louis', 'Raphaël', 'Jules', 'Maël'];
@@ -128,11 +137,16 @@ export async function POST(request) {
     const classesDocs = [];
     for (let c = 0; c < timeline.length; c++) {
       const { niveau, alias } = timeline[c];
-      const isTeacher1 = c < 4;
-      const activeTeacherId = isTeacher1 ? teacher1._id : teacher2._id;
+      const activeTeacherId = teachersList[c % teachersList.length]._id;
+      
+      const corpsEnseignant = subjects.map((sub, idx) => ({
+        enseignantId: teachersList[idx % teachersList.length]._id,
+        matiereId: sub._id
+      }));
+
       const currentClasse = new Classe({
         schoolKey, annee: timeline[0].year, niveau, alias, photo: '/school/classe.webp', moyenne_trimetriel: ["", "", ""],
-        professeur: [activeTeacherId], eleves: [], history: [], createdAt: (+new Date()).toString(),
+        professeur: [activeTeacherId], profPrincipalId: activeTeacherId, corpsEnseignant, eleves: [], history: [], createdAt: (+new Date()).toString(),
         coefficients: getCoefficientsForNiveau(niveau, subjects)
       });
       await currentClasse.save();
@@ -163,17 +177,16 @@ export async function POST(request) {
 
         classe.annee = year;
         classe.eleves = [];
-        const isT1 = c < 4;
-        classe.professeur = [isT1 ? teacher1._id : teacher2._id];
+        classe.professeur = [teachersList[c % teachersList.length]._id];
       }
 
       const currentClasse = classesDocs[activeClassIndex];
-      const isTeacher1 = activeClassIndex < 4;
-      const activeTeacherId = isTeacher1 ? teacher1._id : teacher2._id;
-      const teacherName = isTeacher1 ? 'M. Martin' : 'Mme Dubois';
+      const activeTeacherId = teachersList[activeClassIndex % teachersList.length]._id;
+      const teacherName = `M. ${teachersList[activeClassIndex % teachersList.length].nom}`;
 
-      if (isTeacher1 && !teacher1.current_classes.includes(currentClasse._id)) teacher1.current_classes.push(currentClasse._id);
-      if (!isTeacher1 && !teacher2.current_classes.includes(currentClasse._id)) teacher2.current_classes.push(currentClasse._id);
+      teachersList.forEach(t => {
+        if (!t.current_classes.includes(currentClasse._id)) t.current_classes.push(currentClasse._id);
+      });
 
       // Traitement des élèves
       const activeStudentsDocs = [];
@@ -197,14 +210,6 @@ export async function POST(request) {
           eleve.current_classe = currentClasse._id;
           eleve.school_history[year] = inst.name;
           eleve.bolobi_class_history_$_ref_µ_classes[year] = currentClasse._id.toString();
-          
-          // Générer les notes au format brut (nécessaires pour le calcul des bulletins ReportCards)
-          const rawNotes = generateStudentNotes(currentClasse.niveau, subjects, sData.profileType);
-          if (!eleve.notes) eleve.notes = {};
-          eleve.notes[year] = rawNotes;
-          
-          // Convertir et renseigner les compositions au format moderne pour l'affichage
-          eleve.compositions[year] = convertNotesToCompositions(rawNotes, year);
 
           currentClasse.eleves.push(eleve._id);
           activeStudentsDocs.push(eleve);
@@ -212,13 +217,16 @@ export async function POST(request) {
       }
 
       for (const classe of classesDocs) await classe.save();
+      
+      // --- GÉNÉRATION DES NOTES (NEW ENGINE) ---
+      await generateStudentNotes(currentClasse, activeStudentsDocs, subjects, year, schoolKey);
 
       // --- DÉLÉGATION DE LA GÉNÉRATION PROFONDE ---
       await generateScheduleForClass(currentClasse, subjects, schoolKey, activeTeacherId, userId, year);
       await generateAttendanceForClassYear(currentClasse, activeStudentsDocs, year, schoolKey, activeTeacherId);
       await generateBehaviorAndAdminForClassYear(currentClasse, activeStudentsDocs, year, schoolKey, activeTeacherId, pointLabels, getRandomDateInYear);
       await generateSocialForClassYear(currentClasse, year, schoolKey, activeTeacherId, teacherName, getRandomDateInYear);
-      await generateReportCardsForYear(currentClasse, activeStudentsDocs, year, schoolKey);
+      await generateReportCardsForYear(currentClasse, activeStudentsDocs, year, schoolKey, subjects);
 
       // Bilan Trimestriel du professeur pour la classe
       if (!currentClasse.reports) currentClasse.reports = [];
@@ -231,21 +239,22 @@ export async function POST(request) {
       });
       await currentClasse.save();
 
-      // --- NOUVEAUX SEEDERS (Finances, Evènements, Blog, Groupes) ---
+      // --- NOUVEAUX SEEDERS (Finances, Stages, Dispositifs Inclusifs, Evènements, Blog, Groupes) ---
       await generateFinancialsForClassYear(currentClasse, activeStudentsDocs, year, getRandomDateInYear);
+      await generateStagesForClassYear(currentClasse, activeStudentsDocs, year, schoolKey, teachersList);
+      await generateInclusiveDevicesForClassYear(currentClasse, activeStudentsDocs, year, schoolKey);
+      await generateOrientationForClassYear(currentClasse, activeStudentsDocs, year, schoolKey);
       for (const eleve of activeStudentsDocs) {
         eleve.markModified('school_history');
         eleve.markModified('bolobi_class_history_$_ref_µ_classes');
-        eleve.markModified('notes');
-        eleve.markModified('compositions');
         eleve.markModified('scolarity_fees_$_checkbox');
         await eleve.save();
       }
 
       const adminId = userId;
-      await generateEvents(Event, schoolKey, [teacher1, teacher2], [currentClasse], getRandomDateInYear, year);
+      await generateEvents(Event, schoolKey, teachersList, [currentClasse], getRandomDateInYear, year);
       await generateBlogAndPosts(Article, Post, schoolKey, adminId, getRandomDateInYear, year);
-      await generateGroupsAndMessages(Group, GroupMessage, schoolKey, adminId, [teacher1, teacher2], activeStudentsDocs, getRandomDateInYear, year);
+      await generateGroupsAndMessages(Group, GroupMessage, schoolKey, adminId, teachersList, activeStudentsDocs, getRandomDateInYear, year);
 
       // --- ARCHIVAGE ---
       if (y < timeline.length - 1) {
@@ -278,18 +287,18 @@ export async function POST(request) {
       if (sData.eleveDoc) {
         sData.eleveDoc.markModified('school_history');
         sData.eleveDoc.markModified('bolobi_class_history_$_ref_µ_classes');
-        sData.eleveDoc.markModified('notes');
-        sData.eleveDoc.markModified('compositions');
         sData.eleveDoc.markModified('scolarity_fees_$_checkbox');
         await sData.eleveDoc.save();
       }
     }
-    await teacher1.save();
-    await teacher2.save();
+    for (const t of teachersList) {
+      await t.save();
+    }
 
     await generateGlobalSocialData(schoolKey, userId, getRandomDateInYear);
+    }
 
-    return NextResponse.json({ success: true, message: 'Démo réinitialisée avec succès (Données profondes générées avec succès).' });
+    return NextResponse.json({ success: true, message: 'Démo réinitialisée avec succès pour admin et mode démo.' });
 
   } catch (err) {
     console.error('❌ Reset Demo Error:', err);

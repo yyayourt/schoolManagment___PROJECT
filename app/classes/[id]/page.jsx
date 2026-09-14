@@ -12,7 +12,7 @@ import EntityModal from '../../components/EntityModal';
 import DetailPortal from "../../components/DetailPortal";
 import PermissionGate from "../../components/PermissionGate";
 import NotesBlock from '../../components/NotesBlock';
-import NotesEntryBlock from '../../components/NotesEntryBlock';
+import SaisieNotesCollege from '../../components/SaisieNotesCollege';
 import AddStudentsModal from '../../components/AddStudentsModal';
 import ClassPointsPanel from '../../components/points/ClassPointsPanel';
 import AttendancePanel from '../../components/attendance/AttendancePanel';
@@ -504,13 +504,8 @@ export default function ClasseDetailPage() {
                   </div>
 
                   {(!scanResult || validatedScannedData) && (
-                    <NotesEntryBlock
-                      eleves={eleves}
-                      classeId={classe._id}
-                      isCurrentYear={isViewCurrentYear}
-                      coefficients={currentData.coefficients || {}}
-                      prefilledData={validatedScannedData}
-                      allSubjects={dynamicSubjects}
+                    <SaisieNotesCollege
+                      preselectedClasseId={classe._id}
                     />
                   )}
                 </div>

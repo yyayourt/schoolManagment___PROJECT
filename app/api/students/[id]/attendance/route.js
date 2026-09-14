@@ -44,7 +44,7 @@ export async function GET(request, { params }) {
     })
       .sort({ date: -1 })
       .limit(20)
-      .select('status comment date')
+      .select('status comment date justification')
       .lean()
 
     return NextResponse.json({

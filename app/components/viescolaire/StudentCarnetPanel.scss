@@ -1,0 +1,250 @@
+.student-carnet-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f1f5f9;
+  }
+
+  &__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__add-btn {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.25);
+    }
+  }
+
+  &__empty, &__error {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
+    font-style: italic;
+  }
+
+  &__error {
+    color: #ef4444;
+  }
+}
+
+.student-carnet-form {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #334155;
+    }
+
+    input, select, textarea {
+      padding: 0.6rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: #ffffff;
+
+      &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+      }
+    }
+  }
+
+  &__submit {
+    align-self: flex-end;
+    background: #10b981;
+    color: #ffffff;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #059669;
+    }
+  }
+}
+
+.student-carnet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.student-carnet-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__date {
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  &__title {
+    margin: 0.5rem 0 0.35rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  &__content {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.5;
+  }
+
+  &__parent-reply {
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #166534;
+  }
+
+  &__footer {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__signing-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    textarea {
+      padding: 0.5rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+  }
+
+  &__signing-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  &__cancel-btn {
+    background: #e2e8f0;
+    color: #334155;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  &__sign-btn {
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover {
+      background: #2563eb;
+    }
+  }
+
+  &__signed-info {
+    font-size: 0.8rem;
+    color: #059669;
+    font-weight: 600;
+  }
+}
+
+.carnet-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+
+  &--primary { background: #dbeafe; color: #1e40af; }
+  &--info { background: #e0f2fe; color: #0369a1; }
+  &--warning { background: #fef3c7; color: #b45309; }
+  &--danger { background: #fee2e2; color: #b91c1c; }
+}
+
+.carnet-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+
+  &--signed { background: #dcfce7; color: #15803d; }
+  &--pending { background: #fff7ed; color: #c2410c; }
+}

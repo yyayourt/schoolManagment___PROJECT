@@ -33,23 +33,28 @@ const useResourceCrud = (resource, setList, setLoaded, setSelected) => {
 
   const fetchList = useCallback(async (bypassCache = false) => {
     try {
+      console.log(`[FRONTEND STORE] 🔄 fetchList('${resource}') déclenché (bypassCache: ${bypassCache})`);
       let data = !bypassCache ? getLSItem(resource) : null;
       if (data && Array.isArray(data) && data.length > 0) {
+        console.log(`[FRONTEND STORE] 📦 '${resource}' chargé depuis LocalStorage (nombre: ${data.length})`);
         setList(data);
       } else {
+        console.log(`[FRONTEND STORE] 🌐 Récupération API: GET ${url}`);
         const res = await fetch(url);
+        console.log(`[FRONTEND STORE] 📡 Réponse HTTP ${url}: status ${res.status}`);
         if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
         data = await res.json();
+        console.log(`[FRONTEND STORE] 📥 Données reçues pour '${resource}':`, { isArray: Array.isArray(data), length: Array.isArray(data) ? data.length : 'N/A', raw: data });
         if (Array.isArray(data)) {
           setList(data);
           setLSItem(resource, data);
         } else {
-          console.error(`Erreur lors du fetch des ${resource}:`, data);
+          console.error(`[FRONTEND STORE] ❌ Données non-tableau reçues pour ${resource}:`, data);
           setList([]);
         }
       }
     } catch (err) {
-      console.error(`Erreur fetch ${resource}:`, err);
+      console.error(`[FRONTEND STORE] ❌ Erreur fetch ${resource}:`, err);
     } finally {
       setLoaded(true);
     }
@@ -429,6 +434,38 @@ export const AdminContextProvider = ({ children }) => {
   // Ne déclenche le reset/re-sync que sur un VRAI changement d'identité,
   // pas au montage initial (le chargement initial est géré par l'auto-fetch
   // cache-first plus bas). Évite de vider le cache à chaque rechargement de page.
+  // --- GROUPED BOOTSTRAP FETCH (1 seul appel HTTP au lieu de 5) ---
+  const fetchBootstrap = useCallback(async (bypassCache = false) => {
+    try {
+      const res = await fetch('/api/school_ai/bootstrap');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.classes)) { setClasses(data.classes); setLSItem('classes', data.classes); }
+        if (Array.isArray(data.eleves)) { setEleves(data.eleves); setLSItem('eleves', data.eleves); }
+        if (Array.isArray(data.enseignants)) { setEnseignants(data.enseignants); setLSItem('enseignants', data.enseignants); }
+        if (Array.isArray(data.subjects)) { setDynamicSubjects(data.subjects); setLSItem('app_subjects', data.subjects); }
+        if (data.ecole) {
+          setFeeDefinitions(data.ecole.feeDefinitions || []);
+          setTargetDefinitions(data.ecole.targets || []);
+          setHomepage(data.ecole.homepage || {});
+          setLSItem(FEE_DEFINITIONS_LS_KEY, data.ecole.feeDefinitions || []);
+          setLSItem(TARGET_DEFINITIONS_LS_KEY, data.ecole.targets || []);
+          setLSItem(HOMEPAGE_LS_KEY, data.ecole.homepage || {});
+        }
+      }
+    } catch (err) {
+      console.error('Erreur fetchBootstrap:', err);
+    } finally {
+      setClassesLoaded(true);
+      setElevesLoaded(true);
+      setEnseignantsLoaded(true);
+      setSubjectsLoaded(true);
+      setFeeDefinitionsLoaded(true);
+      setTargetDefinitionsLoaded(true);
+      setHomepageLoaded(true);
+    }
+  }, []);
+
   const isFirstAuthRun = useRef(true);
   useEffect(() => {
     if (isFirstAuthRun.current) {
@@ -436,8 +473,6 @@ export const AdminContextProvider = ({ children }) => {
       return;
     }
 
-    // L'identité a changé (login/logout) : on purge le cache LS lié à l'ancien
-    // utilisateur, on vide les états mémoire, puis on re-fetch en bypass.
     clearLS();
     setEleves([]);
     setEnseignants([]);
@@ -448,27 +483,28 @@ export const AdminContextProvider = ({ children }) => {
     setHomepage({ title: '', texts: [], photo: '' });
 
     const timer = setTimeout(() => {
-      fetchClasses(true);
-      fetchEleves(true);
-      fetchEnseignants(true);
-      fetchSubjects(true);
-      fetchSchoolSettings(true);
+      fetchBootstrap(true);
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [userId, fetchClasses, fetchEleves, fetchEnseignants, fetchSubjects, fetchSchoolSettings]);
+  }, [userId, fetchBootstrap]);
 
+  // --- AUTO FETCH AU MONTAGE UNIFIÉ ---
   useEffect(() => {
-    // Initialisation
-  }, [])
-  // --- AUTO FETCH AU MONTAGE ---
-  useEffect(() => {
-    if (!classesLoaded) fetchClasses();
-    if (!elevesLoaded) fetchEleves();
-    if (!enseignantsLoaded) fetchEnseignants();
-    if (!subjectsLoaded) fetchSubjects();
-    if (!feeDefinitionsLoaded || !targetDefinitionsLoaded || !homepageLoaded) fetchSchoolSettings();
-  }, [classesLoaded, fetchClasses, elevesLoaded, fetchEleves, enseignantsLoaded, fetchEnseignants, subjectsLoaded, fetchSubjects, feeDefinitionsLoaded, targetDefinitionsLoaded, homepageLoaded, fetchSchoolSettings]);
+    const hasCachedClasses = !!getLSItem('classes')?.length;
+    const hasCachedEleves = !!getLSItem('eleves')?.length;
+    const hasCachedEnseignants = !!getLSItem('enseignants')?.length;
+
+    if (!hasCachedClasses || !hasCachedEleves || !hasCachedEnseignants) {
+      fetchBootstrap();
+    } else {
+      if (!classesLoaded) fetchClasses();
+      if (!elevesLoaded) fetchEleves();
+      if (!enseignantsLoaded) fetchEnseignants();
+      if (!subjectsLoaded) fetchSubjects();
+      if (!feeDefinitionsLoaded || !targetDefinitionsLoaded || !homepageLoaded) fetchSchoolSettings();
+    }
+  }, [classesLoaded, fetchClasses, elevesLoaded, fetchEleves, enseignantsLoaded, fetchEnseignants, subjectsLoaded, fetchSubjects, feeDefinitionsLoaded, targetDefinitionsLoaded, homepageLoaded, fetchSchoolSettings, fetchBootstrap]);
 
 
 
@@ -487,6 +523,7 @@ export const AdminContextProvider = ({ children }) => {
     homepage, homepageLoaded, saveHomepage,
     resolveTargetAmount,
     uploadFile,
+    fetchBootstrap,
     selected, setSelected, showModal, setShowModal, editType, setEditType
   }), [
     eleves, fetchEleves, saveEleve, deleteEleve,
@@ -499,6 +536,7 @@ export const AdminContextProvider = ({ children }) => {
     homepage, homepageLoaded, saveHomepage,
     resolveTargetAmount,
     uploadFile,
+    fetchBootstrap,
     selected, showModal, editType
   ]);
 

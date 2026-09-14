@@ -1,0 +1,65 @@
+step 1:
+- ok donc tu peux commencer l'implémentation.
+en combien de temps, ou combien de prompt, ou combien de tokens, tu estime cette mise en application complète de 
+
+TODOMiddleSchool.md
+ 
+
+=> 
+🛠️ Comment voulez-vous procéder ?
+Pour garantir la stabilité de l'application, nous devons absolument procéder étape par étape, en testant chaque bloc avant de passer au suivant.
+
+Si vous êtes prêt, nous pouvons commencer immédiatement par la Phase 1 :
+
+Ajouter le champ type (Primaire/Collège) dans les paramètres de l'école.
+Étendre le système de rôles (RBAC) pour inclure CPE, Surveillant, etc.
+Modifier le modèle Classe pour supporter plusieurs professeurs.
+Voulez-vous que je génère le code pour initier cette Phase 1 ?
+
+- oui
+=> Prochaine étape logique (UI / Front-end)
+Maintenant que la base de données est prête, nous devons rendre ces champs accessibles dans l'interface d'administration. Deux options s'offrent à nous pour la suite :
+
+Option A : Implémenter le Feature Flag globalement. Faire remonter le type de l'institution dans le store global (ai_adminContext.jsx ou le contexte d'auth) pour pouvoir l'utiliser partout dans l'application (ex: if (schoolType === 'COLLEGE') { ... }).
+Option B : Mettre à jour l'interface des Classes. Modifier le modal d'édition d'une classe (app/classes/...) pour permettre d'assigner un Professeur Principal et d'ajouter plusieurs professeurs (le fameux corpsEnseignant).
+Quelle option préférez-vous aborder en premier ?
+
+- B
+=> Étape Suivante : Le Corps Enseignant
+Pour l'attribution fine (Matière <-> Enseignant <-> Salle), il nous faut un composant interactif complet, semblable à ce que nous avons déjà pour les coefficients (CoefficientsManager).
+
+Je vous propose de créer un nouveau composant CorpsEnseignantManager dans app/components/entityBlocks.jsx qui permettra :
+
+De sélectionner une matière (parmi les matières configurées pour la classe).
+D'y assigner un professeur de la liste globale.
+D'indiquer une salle par défaut (optionnel, pour préparer la Phase 4 des emplois du temps).
+Êtes-vous d'accord pour que je passe à la création de ce composant ?
+
+- oui
+=> en vrai je ne veux pas qu'il soi tpossible de choisir entre primaire ou collège, cette version est exclusive au collège. Est-ce que cela implique bcp de modifications dans la logique ou dans le contenu actuel de la spécification ?
+=>
+Souhaitez-vous que l'on attaque directement la Phase 2 : Les Évaluations et le Bulletin ?
+Cette phase est cruciale pour un collège. Nous allons :
+
+Modifier la saisie des notes : Introduire la différence entre Contrôle Continu (CC), Devoir Surveillé (DS) et Examens Blancs.
+Appliquer les coefficients : Utiliser les coefficients configurés dans le Corps Enseignant pour pondérer les moyennes.
+Créer le nouveau Bulletin Trimestriel : Intégrer les moyennes par matière, la moyenne générale, les appréciations des professeurs, l'avis du Conseil de Classe et le bilan du Professeur Principal.
+Pouvons-nous commencer cette Phase 2 ?
+
+
+
+- tu me proposait en option A de finaliser l'UX de phase 1. Ce n'est plus d'actualité ?
+=> Phase 1 UX Complète ✅
+Cette fois-ci, l'interface des classes est vraiment complète pour un collège. Pouvons-nous maintenant passer à la Phase 2 : Le Moteur d'Évaluations et le Bulletin (pondération, DS vs CC, etc.) ?
+
+
+- tu es sûr que la phase 1 est complète ?
+=> Es-tu prêt à lancer la Phase 2 : Le Moteur d'Évaluation ?
+Cette phase va transformer l'expérience pédagogique en intégrant :
+
+Le typage des notes (CC, DS).
+L'intégration des coefficients par matière (réglés dans la classe) dans le calcul des moyennes.
+La modélisation du nouveau Bulletin Trimestriel.
+
+ 
+ - oui je susi prêt

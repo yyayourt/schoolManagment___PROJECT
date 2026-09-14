@@ -21,7 +21,10 @@ import ClasseEnseignantDisplay from '../../components/ClasseEnseignantDisplay';
 import { getEleveImagePath } from '../../../utils/imageUtils';
 import { useDetailPortal } from '../../../stores/useDetailPortal';
 import { useUserRole } from '../../../stores/useUserRole';
-import DetailPortal from "../../components/DetailPortal"
+import DetailPortal from "../../components/DetailPortal";
+import StudentCarnetPanel from '../../components/viescolaire/StudentCarnetPanel';
+import StudentIncidentsPanel from '../../components/viescolaire/StudentIncidentsPanel';
+import StudentInclusiveWidget from '../../components/pedagogie/StudentInclusiveWidget';
 
 export default function ElevePage() {
   const { id } = useParams();
@@ -169,6 +172,8 @@ export default function ElevePage() {
         <div className="ecole-admin__tab-content">
           {activeTab === 'overview' && (
             <div className="ecole-admin__tab-pane active fade-in">
+              <StudentInclusiveWidget studentId={eleve._id} schoolYear={schoolYear} />
+
               <div className="person-detail__gmap">
                 <u>Domicilié (coordonées gmap): </u>
                 <button className="person-detail__gmap-btn" onClick={() => setGmapOpen(o => !o)}>
@@ -251,6 +256,16 @@ export default function ElevePage() {
             <div className="ecole-admin__tab-pane active fade-in">
               <AbsencesBlock absences={eleve.absences} />
 
+              <StudentCarnetPanel
+                studentId={eleve._id}
+                userRole={userRole}
+              />
+
+              <StudentIncidentsPanel
+                studentId={eleve._id}
+                userRole={userRole}
+              />
+
               <div className="person-detail__block person-detail__block--points">
                 <h2 className="person-detail__subtitle">
                   <span className="person-detail__subtitle-icon">🎖️</span>
@@ -269,7 +284,7 @@ export default function ElevePage() {
                   <span className="person-detail__subtitle-icon">📋</span>
                   Présences
                 </h2>
-                <StudentAttendanceWidget studentId={eleve._id} />
+                <StudentAttendanceWidget studentId={eleve._id} userRole={userRole} />
               </div>
 
               {['eleve', 'parent'].includes(userRole) && (
@@ -327,7 +342,7 @@ export default function ElevePage() {
                 </div>
               </PermissionGate>
 
-              <PermissionGate role="admin">
+              <PermissionGate roles={['admin', 'parent']}>
                 {(() => {
                   const allFees = eleve.scolarity_fees_$_checkbox || {};
                   const totals = {};

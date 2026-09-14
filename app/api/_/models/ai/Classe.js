@@ -13,6 +13,24 @@ const classeSchema = mongoose.Schema({
   alias: { default: "", type: String, required: true },
   photo: { default: "/school/classe.webp", type: String, required: false },
   
+  // --- NOUVEAUTÉS COLLÈGE ---
+  profPrincipalId: { type: ObjectId, ref: 'ai_Profs_Ecole_St_Martin' },
+  delegues: [{ type: ObjectId, ref: 'ai_Eleves_Ecole_St_Martin' }], // 2 titulaires + 2 suppléants
+  
+  // Attribution fine Matière <-> Enseignant
+  corpsEnseignant: [{
+    enseignantId: { type: ObjectId, ref: 'ai_Profs_Ecole_St_Martin', required: true },
+    matiereId: { type: ObjectId, ref: 'Subject', required: true },
+    sallePrincipale: { type: String } // Salle attitrée pour cette matière
+  }],
+
+  // Division de la classe pour les options/TP (Demi-groupes)
+  groupes: [{
+    nom: { type: String, required: true }, // Ex: "Groupe A", "LV2 Allemand"
+    eleves: [{ type: ObjectId, ref: 'ai_Eleves_Ecole_St_Martin' }]
+  }],
+  // --------------------------
+  
   homework: { default: {}, type: Object, required: false },
   compositions: { default: [], type: Array, required: false },
   coefficients: {
